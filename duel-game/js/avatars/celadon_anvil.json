@@ -4,7 +4,6 @@
   "color": { "name": "CELADON", "hex": "#8fb0a0" },
   "type": ["超重量級近接", "衝撃蓄積"],
   "level": 4,
-  "initialBP": 100,
 
   "body": {
     "locomotion": "ground",

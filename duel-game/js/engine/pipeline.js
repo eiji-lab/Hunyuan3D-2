@@ -12,7 +12,9 @@ const GAUGE_PER_DAMAGE_TAKEN = 0.28;
 export const GAUGE_PER_PROP_DESTROYED = 9;
 
 function withinGuardArc(defender, hitOrigin) {
-  if (!hitOrigin) return true;
+  // no origin means no attack direction exists (e.g. fall damage) — a shield
+  // has nothing to interpose against, so it cannot reduce it
+  if (!hitOrigin) return false;
   const toHit = hitOrigin.clone().sub(defender.position()).setY(0).normalize();
   const facing = defender.forwardVector();
   return toHit.dot(facing) < 0.15; // guard only covers the front ~100 degrees

@@ -4,7 +4,6 @@
   "color": { "name": "JADE", "hex": "#6fae7f" },
   "type": ["重量級防御", "槍盾近接"],
   "level": 4,
-  "initialBP": 100,
 
   "body": {
     "locomotion": "ground",

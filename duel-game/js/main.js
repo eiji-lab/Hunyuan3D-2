@@ -18,6 +18,13 @@ const AVATAR_LIST = [
 const ROUND_TIME_SEC = 90;
 const COUNTDOWN_SEC = 3;
 const GRAVITY = 24;
+// A fall/knockback off a rooftop or bridge edge only means something if
+// landing hurts. Ordinary jumps (small hops, stepping off a low ledge) stay
+// free — only a fall faster than FALL_SAFE_SPEED starts costing HP. This is
+// also what makes CELADON ANVIL's IMPACT RESERVE "fall" charge source (see
+// celadon_anvil.json) actually reachable — it was declared but never fed.
+const FALL_SAFE_SPEED = 14;
+const FALL_DAMAGE_PER_SPEED = 6;
 
 // test-only simulation speedup (?turbo=N in the URL). Real play never sets
 // this; it exists so automated verification isn't bottlenecked by a
@@ -237,6 +244,7 @@ function updateFacing(combatant, opponent, moveVec, dt) {
 function stepMovement(combatant, moveVec, wantsJump, dt) {
   const inHitstun = performance.now() < combatant.hitstunUntil;
   const speed = combatant.moveSpeedBase * (combatant.anchor.active ? combatant.anchor.moveMultiplier : 1) * combatant.moveMultiplier;
+  const wasGrounded = combatant.grounded;
 
   if (!inHitstun) {
     combatant.velocity.x = moveVec.x * speed;
@@ -248,6 +256,7 @@ function stepMovement(combatant, moveVec, wantsJump, dt) {
   }
 
   combatant.velocity.y = Math.max(-28, combatant.velocity.y - GRAVITY * dt);
+  const fallSpeedThisFrame = -combatant.velocity.y;
 
   const next = combatant.mesh.position.clone().addScaledVector(combatant.velocity, dt);
   const ground = city.resolveGroundHeight(next.x, next.z, combatant.mesh.position.y);
@@ -258,6 +267,17 @@ function stepMovement(combatant, moveVec, wantsJump, dt) {
     combatant.velocity.z = 0;
   }
   if (next.y <= ground.height) {
+    if (!wasGrounded && matchState === 'battle') {
+      const excess = fallSpeedThisFrame - FALL_SAFE_SPEED;
+      if (excess > 0) {
+        const amount = excess * FALL_DAMAGE_PER_SPEED;
+        const result = pipeline.applyHit(combatant, combatant, {
+          amount, knockback: null, origin: null, kind: 'fall',
+        });
+        handleEvents(combatant, combatant, result.events);
+        vfx.spawnBurst(next.clone().add(new THREE.Vector3(0, 0.2, 0)), 0xd8d8d0, 10, 3);
+      }
+    }
     next.y = ground.height;
     combatant.velocity.y = 0;
     combatant.grounded = true;
@@ -447,8 +467,10 @@ window.__game = {
     roundTimeRemaining,
     keysDown: Array.from(keys.down),
     fps: fpsEl.textContent,
+    playerCharge: player && player.chargeStore ? player.chargeStore.value : null,
   }),
   getStairs: () => city.stairs.map((s) => ({ minX: s.minX, maxX: s.maxX, minZ: s.minZ, maxZ: s.maxZ, axis: s.axis, sign: s.sign, base: s.base, run: s.run, height: s.height })),
+  getBuildings: () => city.buildings.map((b) => ({ x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1, h: b.h })),
   teleportPlayer: (x, y, z) => { player.mesh.position.set(x, y, z); player.velocity.set(0, 0, 0); },
   getEventLog: () => debugEventLog.slice(),
 };
