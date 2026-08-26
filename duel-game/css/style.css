@@ -1,0 +1,112 @@
+@font-face { font-family: system; src: local('Arial'); }
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+  background: #0b0d0f;
+  font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', Arial, sans-serif;
+  color: #eef2ee;
+  user-select: none;
+}
+
+#game-canvas { position: fixed; inset: 0; display: block; }
+
+.fps-counter {
+  position: fixed; bottom: 14px; right: 16px; font-size: 11px;
+  color: rgba(255,255,255,0.55); background: rgba(0,0,0,0.35);
+  padding: 3px 8px; border-radius: 3px; font-family: monospace;
+  pointer-events: none;
+}
+
+.crosshair-hint {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  font-size: 12px; letter-spacing: 0.04em; color: rgba(255,255,255,0.6);
+  background: rgba(0,0,0,0.35); padding: 4px 12px; border-radius: 3px;
+  pointer-events: none;
+}
+
+/* ---------------- HUD panels ---------------- */
+.hud-panel {
+  position: fixed; top: 18px; width: 320px; padding: 10px 14px;
+  background: linear-gradient(180deg, rgba(10,14,16,0.82), rgba(10,14,16,0.55));
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 4px;
+  backdrop-filter: blur(2px);
+}
+.hud-left { left: 18px; }
+.hud-right { right: 18px; text-align: right; }
+
+.hud-name {
+  font-weight: 700; font-size: 14px; letter-spacing: 0.06em;
+  margin-bottom: 6px; text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.hud-bar {
+  height: 12px; border-radius: 2px; background: rgba(255,255,255,0.12);
+  overflow: hidden; margin-bottom: 5px; border: 1px solid rgba(0,0,0,0.5);
+}
+.hud-bar-fill { height: 100%; transition: width 0.12s linear; }
+.hud-hp .hud-bar-fill { background: linear-gradient(90deg,#c0392b,#e74c3c); width: 100%; }
+.hud-sp .hud-bar-fill { background: linear-gradient(90deg,#d68910,#f4d03f); width: 0%; }
+.hud-right .hud-bar-fill { float: right; }
+
+.hud-custom { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+.hud-custom-row {
+  display: flex; justify-content: space-between; font-size: 11px;
+  letter-spacing: 0.03em; color: rgba(255,255,255,0.78);
+  border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 3px;
+}
+.hud-right .hud-custom-row { flex-direction: row-reverse; }
+.hud-custom-label { font-weight: 600; text-transform: uppercase; opacity: 0.75; }
+.hud-custom-value.hud-flag-on { color: #6fd3ff; font-weight: 700; }
+
+.hud-timer {
+  position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+  font-size: 30px; font-weight: 800; letter-spacing: 0.05em;
+  background: rgba(10,14,16,0.82); padding: 4px 22px; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+/* ---------------- overlays ---------------- */
+.overlay {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+  background: rgba(6,8,9,0.72); z-index: 10;
+}
+.overlay.visible { display: flex; }
+
+.select-overlay { gap: 28px; flex-wrap: wrap; }
+.select-card {
+  width: 220px; padding: 22px 18px; background: rgba(20,24,26,0.9);
+  border: 2px solid var(--avatar-color, #888); border-radius: 6px;
+  color: #eef2ee; cursor: pointer; text-align: center;
+  transition: transform 0.12s ease;
+}
+.select-card:hover { transform: translateY(-4px); background: rgba(30,36,38,0.95); }
+.select-swatch {
+  width: 100%; height: 64px; border-radius: 4px; margin-bottom: 14px;
+  background: var(--avatar-color, #888);
+}
+.select-name { font-weight: 800; font-size: 16px; letter-spacing: 0.05em; }
+.select-sub { font-size: 12px; opacity: 0.7; margin: 2px 0 8px; }
+.select-type { font-size: 11px; opacity: 0.55; letter-spacing: 0.03em; }
+
+.countdown-text {
+  font-size: 96px; font-weight: 900; letter-spacing: 0.05em;
+  color: #fff; text-shadow: 0 4px 24px rgba(0,0,0,0.7);
+}
+
+.hud-result {
+  position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%);
+  display: none; flex-direction: column; align-items: center; gap: 18px;
+  background: rgba(8,10,11,0.88); padding: 30px 46px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.18); z-index: 11;
+}
+.hud-result.visible { display: flex; }
+.hud-result-text { font-size: 28px; font-weight: 800; letter-spacing: 0.04em; }
+.rematch-btn {
+  padding: 10px 28px; font-size: 14px; font-weight: 700; letter-spacing: 0.06em;
+  background: #f4d03f; border: none; border-radius: 4px; cursor: pointer;
+}
+.rematch-btn:hover { background: #f7dc6f; }

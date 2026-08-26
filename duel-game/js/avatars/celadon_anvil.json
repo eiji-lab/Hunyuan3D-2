@@ -1,0 +1,96 @@
+{
+  "id": "celadon_anvil",
+  "name": { "en": "CELADON ANVIL", "ja": "セラドン・アンヴィル" },
+  "color": { "name": "CELADON", "hex": "#8fb0a0" },
+  "type": ["超重量級近接", "衝撃蓄積"],
+  "level": 4,
+  "initialBP": 100,
+
+  "body": {
+    "locomotion": "ground",
+    "moveSpeed": 5.6,
+    "jump": 0.55,
+    "reach": 1.1,
+    "hp": 1400,
+    "mass": 1.85
+  },
+
+  "controls": [
+    { "slot": "primary", "key": "KeyJ", "mode": "press", "label": "HAMMER" },
+    { "slot": "anchor", "key": "KeyK", "mode": "hold", "label": "ANCHOR FEET" }
+  ],
+
+  "hud": {
+    "customGauges": [
+      { "id": "impact_reserve", "label": "IMPACT RESERVE", "source": "chargeStore" }
+    ],
+    "customFlags": [
+      { "id": "anchor_state", "label": "ANCHOR", "source": "anchorActive" }
+    ]
+  },
+
+  "loadout": [
+    {
+      "level": 1,
+      "id": "impact_reserve",
+      "displayName": "IMPACT RESERVE",
+      "layer": "ability",
+      "input": null,
+      "effects": [
+        { "type": "charge_store", "sources": ["melee", "fall", "explosion"], "rate": 0.55, "max": 90 }
+      ]
+    },
+    {
+      "level": 1,
+      "id": "anchor_feet",
+      "displayName": "ANCHOR FEET",
+      "layer": "body",
+      "input": { "slot": "anchor", "label": "ANCHOR FEET" },
+      "effects": [
+        { "type": "anchor", "kbResistance": 0.82, "moveMultiplier": 0.12, "turnMultiplier": 0.45 }
+      ]
+    },
+    {
+      "level": 2,
+      "id": "pile_hammer",
+      "displayName": "PILE HAMMER",
+      "layer": "gear",
+      "input": { "slot": "primary", "label": "PILE HAMMER" },
+      "effects": [
+        {
+          "type": "melee",
+          "power": 20,
+          "reach": 2.1,
+          "arcDeg": 75,
+          "windupMs": 300,
+          "cooldownMs": 700,
+          "knockback": 7,
+          "weaponShape": "hammer",
+          "consumesChargeId": "impact_reserve",
+          "chargeBonusRatio": 1.0
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "id": "counter_step",
+      "displayName": "COUNTER STEP",
+      "layer": "ability",
+      "input": null,
+      "trigger": "on_anchor_release",
+      "effects": [
+        { "type": "self_state", "kind": "dash", "impulse": 10.5 }
+      ]
+    },
+    {
+      "level": 4,
+      "id": "rooted_frame",
+      "displayName": "ROOTED FRAME",
+      "layer": "body",
+      "input": null,
+      "effects": [
+        { "type": "anchor", "kbResistance": 0.93, "moveMultiplier": 0.12, "turnMultiplier": 0.25 }
+      ]
+    }
+  ]
+}

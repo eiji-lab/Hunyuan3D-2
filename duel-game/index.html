@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>BRAIN BURST — DUEL PROTOTYPE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="hud-timer" class="hud-timer">90</div>
+  <div id="hud-left" class="hud-panel hud-left"></div>
+  <div id="hud-right" class="hud-panel hud-right"></div>
+
+  <div id="crosshair-hint" class="crosshair-hint">クリックでカメラ操作 / WASD 移動 / Space ジャンプ</div>
+  <div id="fps-counter" class="fps-counter">-- fps</div>
+
+  <div id="select-overlay" class="overlay select-overlay"></div>
+
+  <div id="countdown-overlay" class="overlay countdown-overlay">
+    <div id="countdown-text" class="countdown-text">3</div>
+  </div>
+
+  <div id="hud-result" class="hud-result">
+    <div class="hud-result-text"></div>
+    <button id="rematch-btn" class="rematch-btn">REMATCH</button>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

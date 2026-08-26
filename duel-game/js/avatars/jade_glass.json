@@ -1,0 +1,81 @@
+{
+  "id": "jade_glass",
+  "name": { "en": "JADE GLASS", "ja": "ジェード・グラス" },
+  "color": { "name": "JADE", "hex": "#6fae7f" },
+  "type": ["重量級防御", "槍盾近接"],
+  "level": 4,
+  "initialBP": 100,
+
+  "body": {
+    "locomotion": "ground",
+    "moveSpeed": 7.4,
+    "jump": 0.65,
+    "reach": 1.1,
+    "hp": 1200,
+    "mass": 1.55
+  },
+
+  "controls": [
+    { "slot": "primary", "key": "KeyJ", "mode": "press", "label": "GLASS LANCE" }
+  ],
+
+  "hud": {
+    "customGauges": [],
+    "customFlags": [
+      { "id": "fracture_stage", "label": "FRACTURE", "source": "fractureStage", "max": 3 },
+      { "id": "guard_state", "label": "SHIELD", "source": "guardDurabilityPct" }
+    ]
+  },
+
+  "loadout": [
+    {
+      "level": 1,
+      "id": "delayed_fracture",
+      "displayName": "DELAYED FRACTURE",
+      "layer": "ability",
+      "input": null,
+      "effects": [
+        { "type": "damage_defer", "threshold": 20, "deferRate": 0.55, "stages": 1, "intervalMs": 700 }
+      ]
+    },
+    {
+      "level": 2,
+      "id": "glass_lance",
+      "displayName": "GLASS LANCE",
+      "layer": "gear",
+      "input": { "slot": "primary", "label": "GLASS LANCE" },
+      "effects": [
+        {
+          "type": "melee",
+          "power": 15,
+          "reach": 3.3,
+          "arcDeg": 45,
+          "windupMs": 340,
+          "cooldownMs": 720,
+          "knockback": 4,
+          "weaponShape": "lance"
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "id": "glass_shield",
+      "displayName": "GLASS SHIELD",
+      "layer": "gear",
+      "input": null,
+      "effects": [
+        { "type": "guard", "reduction": 0.55, "maxDurability": 150, "wearRate": 0.55 }
+      ]
+    },
+    {
+      "level": 4,
+      "id": "layered_armor",
+      "displayName": "LAYERED ARMOR",
+      "layer": "body",
+      "input": null,
+      "effects": [
+        { "type": "damage_defer", "threshold": 20, "deferRate": 0.6, "stages": 3, "intervalMs": 480 }
+      ]
+    }
+  ]
+}
