@@ -66,10 +66,10 @@ function attachWeaponVisual(combatant, entry, effect) {
   combatant.weaponBaseZ = mesh.position.z;
 }
 
-export function buildCombatant(avatarData, level, scene) {
+export function buildCombatant(avatarData, level, scene, bodyTemplate) {
   const data = JSON.parse(JSON.stringify(avatarData));
   data.level = level;
-  const combatant = new Combatant(data, scene);
+  const combatant = new Combatant(data, scene, bodyTemplate);
   combatant.controls = data.controls || [];
   combatant.hudSpec = data.hud || {};
 

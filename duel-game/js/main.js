@@ -10,6 +10,7 @@ import { pollAvatarInput } from './engine/inputManager.js';
 import { ThirdPersonCamera } from './camera/thirdPersonCamera.js';
 import { createAIState, tickAI } from './ai/aiController.js';
 import { HUD } from './hud/hud.js';
+import { loadBodyTemplate } from './engine/modelLoader.js';
 
 const AVATAR_LIST = [
   { id: 'celadon_anvil', path: './js/avatars/celadon_anvil.json' },
@@ -79,6 +80,7 @@ const overlayResult = document.getElementById('hud-result');
 const rematchBtn = document.getElementById('rematch-btn');
 
 let avatarDataCache = {};
+let bodyTemplate = null;
 let player, opponent, aiState;
 let matchState = 'loading'; // loading | select | countdown | battle | result
 let countdownRemaining = COUNTDOWN_SEC;
@@ -88,6 +90,7 @@ const prevHeld = { player: new Set(), opponent: new Set() };
 // -------------------------------------------------------------- avatar load
 async function preloadAvatars() {
   for (const a of AVATAR_LIST) avatarDataCache[a.id] = await loadAvatarData(a.path);
+  bodyTemplate = await loadBodyTemplate(); // null if the asset failed to load — Combatant falls back to primitives
 }
 
 function setupSelectScreen() {
@@ -120,8 +123,8 @@ function clearCombatants() {
 function startMatch(playerId) {
   clearCombatants();
   const opponentDef = AVATAR_LIST.find((a) => a.id !== playerId);
-  player = buildCombatant(avatarDataCache[playerId], avatarDataCache[playerId].level, scene);
-  opponent = buildCombatant(avatarDataCache[opponentDef.id], avatarDataCache[opponentDef.id].level, scene);
+  player = buildCombatant(avatarDataCache[playerId], avatarDataCache[playerId].level, scene, bodyTemplate);
+  opponent = buildCombatant(avatarDataCache[opponentDef.id], avatarDataCache[opponentDef.id].level, scene, bodyTemplate);
 
   const sp = city.spawnPoints;
   player.mesh.position.set(sp[0].x, 0, sp[0].z);
@@ -294,7 +297,26 @@ function stepMovement(combatant, moveVec, wantsJump, dt) {
 
 function updateSwingAnimation(combatant, dt) {
   combatant.attackWindup = Math.max(0, combatant.attackWindup - dt * 2.4);
-  if (combatant.weaponSocket) combatant.weaponSocket.rotation.x = -combatant.attackWindup * 1.25;
+  // the modeled body swings via its own 'Punch' skeletal clip (triggered in
+  // primitives.meleeAttack) — this manual socket-rotation hack is only for
+  // the primitive-box fallback body, which has no skeleton to animate it.
+  if (!combatant.mixer && combatant.weaponSocket) {
+    combatant.weaponSocket.rotation.x = -combatant.attackWindup * 1.25;
+  }
+}
+
+function updateCharacterAnimation(combatant, horizontalSpeed) {
+  if (!combatant.mixer) return;
+  if (!combatant.isAlive()) {
+    if (!combatant.deathPlayed) {
+      combatant.deathPlayed = true;
+      combatant.playAnimation('death', { fadeTime: 0.3, once: true });
+    }
+    return;
+  }
+  const punching = combatant.currentActionName === 'punch' && combatant.actions.punch?.isRunning();
+  if (punching) return;
+  combatant.playAnimation(horizontalSpeed > 0.4 ? 'run' : 'idle');
 }
 
 function updatePassiveVisuals(combatant) {
@@ -306,7 +328,7 @@ function updatePassiveVisuals(combatant) {
   if (combatant.chargeStore) {
     const t = combatant.chargeStore.value / combatant.chargeStore.max;
     if (combatant.weaponMesh) {
-      combatant.weaponMesh.material.emissiveIntensity = 0.3 + t * 1.4;
+      combatant.weaponMesh.material.emissiveIntensity = 0.2 + t * 0.75;
     }
   }
 }
@@ -429,6 +451,10 @@ function frame() {
 
     updateSwingAnimation(player, dt);
     updateSwingAnimation(opponent, dt);
+    updateCharacterAnimation(player, Math.hypot(player.velocity.x, player.velocity.z));
+    updateCharacterAnimation(opponent, Math.hypot(opponent.velocity.x, opponent.velocity.z));
+    if (player.mixer) player.mixer.update(dt);
+    if (opponent.mixer) opponent.mixer.update(dt);
     updatePassiveVisuals(player);
     updatePassiveVisuals(opponent);
     updateProjectiles(dt);
@@ -471,6 +497,10 @@ window.__game = {
   }),
   getStairs: () => city.stairs.map((s) => ({ minX: s.minX, maxX: s.maxX, minZ: s.minZ, maxZ: s.maxZ, axis: s.axis, sign: s.sign, base: s.base, run: s.run, height: s.height })),
   getBuildings: () => city.buildings.map((b) => ({ x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1, h: b.h })),
+  getPlayerBBox: () => {
+    const box = new THREE.Box3().setFromObject(player.mesh);
+    return { min: box.min.toArray(), max: box.max.toArray(), size: box.getSize(new THREE.Vector3()).toArray() };
+  },
   teleportPlayer: (x, y, z) => { player.mesh.position.set(x, y, z); player.velocity.set(0, 0, 0); },
   getEventLog: () => debugEventLog.slice(),
 };

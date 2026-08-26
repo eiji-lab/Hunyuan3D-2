@@ -1,11 +1,23 @@
-// engine/combatant.js — runtime state + primitive-shaped body for one avatar.
-// Body geometry is intentionally primitive (boxes/capsules): modeling is out
-// of scope for this phase, only silhouette/color communicate the avatar.
+// engine/combatant.js — runtime state + body for one avatar.
+//
+// Body: if a shared glTF body template loaded (see modelLoader.js), each
+// combatant gets its own skeleton-correct clone of it (tinted per avatar
+// color, animated). If the model failed to load for any reason, this falls
+// back to the original primitive box body so the game never hard-fails on
+// a missing/broken asset. Per-avatar sculpting is a later phase either way
+// (see project brief §7) — this only replaces "boxes" with "a humanoid".
 
 import * as THREE from '../vendor/three.module.js';
+import { cloneBody } from './modelLoader.js';
+
+// RobotExpressive's raw rig is ~4.9 units tall; the city (props ~1 unit,
+// stair rise ~1.1 units, melee reach 2.1-3.3) was built assuming a
+// human-scale ~2.6-unit-tall combatant, so the model needs scaling down.
+const MODEL_SCALE = 0.39;
+const ANIM_NAMES = { idle: 'Idle', walk: 'Walking', run: 'Running', punch: 'Punch', death: 'Death' };
 
 export class Combatant {
-  constructor(avatarData, THREE_scene) {
+  constructor(avatarData, THREE_scene, bodyTemplate) {
     this.data = avatarData;
     this.name = avatarData.name.en;
     this.color = new THREE.Color(avatarData.color.hex);
@@ -38,11 +50,72 @@ export class Combatant {
     this.hitstunUntil = 0;
     this.moveMultiplier = 1;
 
-    this.mesh = this._buildBody(avatarData);
+    this.mixer = null;
+    this.actions = {};
+    this.currentActionName = null;
+    this.deathPlayed = false;
+
+    this.mesh = bodyTemplate ? this._buildModeledBody(avatarData, bodyTemplate) : this._buildPrimitiveBody(avatarData);
     THREE_scene.add(this.mesh);
   }
 
-  _buildBody(data) {
+  _buildModeledBody(data, template) {
+    const bulk = data.body.mass ?? 1;
+    const group = new THREE.Group();
+    const model = cloneBody(template);
+    model.scale.setScalar(MODEL_SCALE * Math.sqrt(bulk));
+    model.traverse((o) => {
+      if (o.isMesh) {
+        o.castShadow = true;
+        o.receiveShadow = true;
+        if (o.material && o.material.name === 'Main') {
+          o.material = o.material.clone();
+          o.material.color.copy(this.color);
+          this.torsoMaterial = o.material;
+        }
+      }
+    });
+    group.add(model);
+    this.modelRoot = model;
+
+    if (!this.torsoMaterial) {
+      // defensive fallback in case the rig's material naming ever changes
+      model.traverse((o) => { if (o.isMesh && !this.torsoMaterial) this.torsoMaterial = o.material; });
+    }
+
+    this.mixer = new THREE.AnimationMixer(model);
+    for (const [key, clipName] of Object.entries(ANIM_NAMES)) {
+      const clip = THREE.AnimationClip.findByName(template.animations, clipName);
+      if (clip) this.actions[key] = this.mixer.clipAction(clip);
+    }
+    this.playAnimation('idle');
+
+    const handBone = model.getObjectByName('Hand.R');
+    const weaponSocket = new THREE.Group();
+    weaponSocket.rotation.set(0, Math.PI / 2, Math.PI / 2);
+    (handBone ?? group).add(weaponSocket);
+    this.weaponSocket = weaponSocket;
+
+    return group;
+  }
+
+  playAnimation(key, { fadeTime = 0.25, once = false } = {}) {
+    const action = this.actions[key];
+    if (!action || this.currentActionName === key) return;
+    const previous = this.currentActionName ? this.actions[this.currentActionName] : null;
+    action.reset();
+    if (once) {
+      action.setLoop(THREE.LoopOnce);
+      action.clampWhenFinished = true;
+    } else {
+      action.setLoop(THREE.LoopRepeat);
+    }
+    action.fadeIn(fadeTime).play();
+    if (previous) previous.fadeOut(fadeTime);
+    this.currentActionName = key;
+  }
+
+  _buildPrimitiveBody(data) {
     const bulk = data.body.mass ?? 1;
     const group = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({ color: this.color, roughness: 0.55, metalness: 0.25 });

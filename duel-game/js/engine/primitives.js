@@ -45,6 +45,7 @@ export function meleeAttack(ctx, entry, effect) {
 
   attacker.attackWindup = 1;
   attacker.pendingSwing = { entry, effect, ctx, triggerAt: performance.now() + effect.windupMs, resolved: false };
+  attacker.playAnimation?.('punch', { fadeTime: 0.08, once: true });
   return { events: [{ type: 'windup', id: entry.id }] };
 }
 
