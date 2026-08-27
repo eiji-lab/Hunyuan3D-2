@@ -9,6 +9,15 @@ import * as THREE from '../vendor/three.module.js';
 import { Combatant } from './combatant.js';
 
 export async function loadAvatarData(path) {
+  // Bundled single-file builds (see build-artifact.mjs) have no server to
+  // fetch from — they set window.__EMBEDDED_ASSETS__.avatars ahead of time
+  // and this transparently prefers that over a network fetch. The normal
+  // multi-file/http-server deployment never sets this global, so nothing
+  // changes for it.
+  const id = path.match(/([a-z_]+)\.json$/)?.[1];
+  const embedded = window.__EMBEDDED_ASSETS__?.avatars?.[id];
+  if (embedded) return embedded;
+
   const res = await fetch(path);
   if (!res.ok) throw new Error(`avatar data fetch failed: ${path} (${res.status})`);
   return res.json();
