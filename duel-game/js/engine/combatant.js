@@ -39,6 +39,8 @@ export class Combatant {
     this.deferQueue = [];
     this.fractureStage = 0;
     this.chargeStore = null; // { value, max, rate, sources: [] }
+    this.resources = {}; // resourceId -> { current, max } — e.g. OLIVE WEDGE's COAT MISSILE ammo
+    this.coatMode = 'grip'; // OLIVE WEDGE's SURFACE COAT tag toggle; unused by avatars without it
 
     this.anchor = { active: false, kbResistance: 0, moveMultiplier: 1, turnMultiplier: 1 };
     this.buffs = [];

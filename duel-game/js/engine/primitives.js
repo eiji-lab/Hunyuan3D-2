@@ -40,13 +40,31 @@ function findMeleeTarget(ctx, effect) {
 
 export function meleeAttack(ctx, entry, effect) {
   const attacker = ctx.attacker;
-  if (!attacker.cooldownReady(entry.id) || attacker.pendingSwing) return { events: [] };
+  if (!attacker.cooldownReady(entry.id) || attacker.pendingSwing) return [];
   attacker.setCooldown(entry.id, effect.cooldownMs);
 
   attacker.attackWindup = 1;
   attacker.pendingSwing = { entry, effect, ctx, triggerAt: performance.now() + effect.windupMs, resolved: false };
   attacker.playAnimation?.('punch', { fadeTime: 0.08, once: true });
-  return { events: [{ type: 'windup', id: entry.id }] };
+  return [{ type: 'windup', id: entry.id }];
+}
+
+// dispatches any button-triggered loadout effect to its primitive. 'melee'
+// is handled through the windup/resolveSwing flow above rather than here;
+// the D-group snapshot/restore pair and target_state are included for
+// engine completeness even though no shipped avatar currently uses them.
+export function runTriggeredEffect(ctx, entry, effect) {
+  switch (effect.type) {
+    case 'melee': return meleeAttack(ctx, entry, effect);
+    case 'projectile': return spawnProjectile(ctx, entry, effect);
+    case 'surface_write': return surfaceWrite(ctx, effect);
+    case 'global_flip': return globalFlip(ctx, entry, effect);
+    case 'self_state': return selfState(ctx, effect);
+    case 'target_state': return targetState(ctx, effect);
+    case 'state_snapshot': return snapshotState(ctx, effect);
+    case 'state_restore': return restoreState(ctx, effect);
+    default: return [];
+  }
 }
 
 // called by main.js once the swing animation reaches impact time
@@ -119,19 +137,22 @@ export function toggleAnchor(ctx, active) {
 
 export function surfaceWrite(ctx, effect) {
   const p = ctx.attacker.mesh.position;
-  ctx.engine.city.surfaceGrid.paint(p.x, p.z, effect.radius ?? 3, effect.tag);
-  return [{ type: 'surface_write', tag: effect.tag }];
+  const tag = effect.useCurrentMode ? ctx.attacker.coatMode : effect.tag;
+  ctx.engine.city.surfaceGrid.paint(p.x, p.z, effect.radius ?? 3, tag);
+  return [{ type: 'surface_write', tag, x: p.x, z: p.z }];
 }
 
-export function globalFlip(ctx, effect) {
+export function globalFlip(ctx, entry, effect) {
+  const attacker = ctx.attacker;
+  if (!attacker.cooldownReady(entry.id)) return [];
+  attacker.setCooldown(entry.id, effect.cooldownMs ?? 1500);
   ctx.engine.city.surfaceGrid.flipAll(effect.mapping);
   return [{ type: 'global_flip' }];
 }
 
-export function spawnProjectile(ctx, entry, effect) {
+function spawnOneProjectile(ctx, effect, dir) {
   const attacker = ctx.attacker;
   const origin = attacker.mesh.position.clone().add(new THREE.Vector3(0, 1.1, 0));
-  const dir = attacker.forwardVector();
   const mesh = new THREE.Mesh(
     new THREE.SphereGeometry(0.18, 8, 8),
     new THREE.MeshStandardMaterial({ color: attacker.color, emissive: attacker.color, emissiveIntensity: 0.6 })
@@ -142,7 +163,33 @@ export function spawnProjectile(ctx, entry, effect) {
     mesh, velocity: dir.clone().multiplyScalar(effect.speed ?? 20),
     attacker, effect, life: effect.lifeMs ?? 2500, bornAt: performance.now(),
   });
-  return [{ type: 'projectile_spawned' }];
+}
+
+export function spawnProjectile(ctx, entry, effect) {
+  const attacker = ctx.attacker;
+  if (!attacker.cooldownReady(entry.id)) return [];
+
+  if (effect.consumesResourceId) {
+    const res = attacker.resources[effect.consumesResourceId];
+    if (!res || res.current <= 0) return [{ type: 'no_ammo', id: effect.consumesResourceId }];
+    res.current -= 1;
+  }
+  attacker.setCooldown(entry.id, effect.cooldownMs ?? 500);
+
+  const forward = attacker.forwardVector();
+  const count = effect.count ?? 1;
+  if (count === 1) {
+    spawnOneProjectile(ctx, effect, forward);
+  } else {
+    const spreadRad = ((effect.spreadDeg ?? 40) * Math.PI) / 180;
+    for (let i = 0; i < count; i++) {
+      const t = count === 1 ? 0 : i / (count - 1) - 0.5; // -0.5..0.5
+      const angle = t * spreadRad;
+      const dir = forward.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+      spawnOneProjectile(ctx, effect, dir);
+    }
+  }
+  return [{ type: 'projectile_spawned', count }];
 }
 
 export function targetState(ctx, effect) {
@@ -160,6 +207,15 @@ export function selfState(ctx, effect) {
   if (effect.kind === 'dash') {
     ctx.attacker.velocity.add(ctx.attacker.forwardVector().multiplyScalar(effect.impulse));
     return [{ type: 'self_dash' }];
+  }
+  if (effect.kind === 'toggle_mode') {
+    // OLIVE WEDGE's coat-mode switch: not a combat action itself, just a
+    // piece of self state that surface_write/projectile effects read at
+    // the moment they fire (see effect.useCurrentMode).
+    const modes = effect.modes;
+    const current = ctx.attacker.coatMode ?? modes[0];
+    ctx.attacker.coatMode = modes[(modes.indexOf(current) + 1) % modes.length];
+    return [{ type: 'mode_toggle', mode: ctx.attacker.coatMode }];
   }
   ctx.engine.stateManager.addBuff(ctx.attacker, { tag: effect.tag, durationMs: effect.durationMs });
   return [{ type: 'self_state', tag: effect.tag }];

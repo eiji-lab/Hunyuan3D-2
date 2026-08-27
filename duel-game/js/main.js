@@ -11,10 +11,12 @@ import { ThirdPersonCamera } from './camera/thirdPersonCamera.js';
 import { createAIState, tickAI } from './ai/aiController.js';
 import { HUD } from './hud/hud.js';
 import { loadBodyTemplate } from './engine/modelLoader.js';
+import { playSfx } from './engine/audio.js';
 
 const AVATAR_LIST = [
   { id: 'celadon_anvil', path: './js/avatars/celadon_anvil.json' },
   { id: 'jade_glass', path: './js/avatars/jade_glass.json' },
+  { id: 'olive_wedge', path: './js/avatars/olive_wedge.json' },
 ];
 const ROUND_TIME_SEC = 90;
 const COUNTDOWN_SEC = 3;
@@ -122,7 +124,8 @@ function clearCombatants() {
 
 function startMatch(playerId) {
   clearCombatants();
-  const opponentDef = AVATAR_LIST.find((a) => a.id !== playerId);
+  const remaining = AVATAR_LIST.filter((a) => a.id !== playerId);
+  const opponentDef = remaining[Math.floor(Math.random() * remaining.length)];
   player = buildCombatant(avatarDataCache[playerId], avatarDataCache[playerId].level, scene, bodyTemplate);
   opponent = buildCombatant(avatarDataCache[opponentDef.id], avatarDataCache[opponentDef.id].level, scene, bodyTemplate);
 
@@ -176,6 +179,17 @@ function handleEvents(attacker, defender, events) {
       case 'counter_step':
         vfx.spawnBurst(attacker.mesh.position.clone().add(new THREE.Vector3(0, 0.3, 0)), 0xdddddd, 5, 2);
         break;
+      case 'surface_write': {
+        const color = ev.tag === 'slip' ? 0x6fa8d8 : 0x8fbf6a;
+        vfx.spawnBurst(new THREE.Vector3(ev.x, 0.3, ev.z), color, 8, 2.5);
+        break;
+      }
+      case 'global_flip':
+        vfx.spawnBurst(attacker.mesh.position.clone().add(new THREE.Vector3(0, 0.5, 0)), 0xffffff, 10, 3);
+        break;
+      case 'mode_toggle':
+        vfx.spawnBurst(attacker.mesh.position.clone().add(new THREE.Vector3(0, 1.6, 0)), ev.mode === 'slip' ? 0x6fa8d8 : 0x8fbf6a, 4, 1.5);
+        break;
       default:
         break;
     }
@@ -186,8 +200,19 @@ function processInput(self, opponentRef, inputResult, prevHeldSet) {
   for (const entryId of inputResult.triggeredEntryIds) {
     const entry = self.activeLoadout.find((e) => e.id === entryId);
     if (!entry) continue;
+
+    // 必殺技ゲージ消費: gated at the entry level so a special with
+    // insufficient gauge simply does nothing (no partial effect, no
+    // refund needed) — engine-generic, not specific to any one avatar.
+    if (entry.layer === 'special' && entry.gaugeCost) {
+      if (self.specialGauge < entry.gaugeCost) continue;
+      self.specialGauge -= entry.gaugeCost;
+      playSfx(entry.id); // technique-name voice line hook, once a file exists
+    }
+
     for (const effect of entry.effects) {
-      if (effect.type === 'melee') primitives.meleeAttack(buildCtx(self, opponentRef), entry, effect);
+      const events = primitives.runTriggeredEffect(buildCtx(self, opponentRef), entry, effect);
+      handleEvents(self, opponentRef, events);
     }
   }
   for (const control of self.controls) {
@@ -338,20 +363,39 @@ function updateProjectiles(dt) {
   const now = performance.now();
   for (let i = engine.projectiles.length - 1; i >= 0; i--) {
     const p = engine.projectiles[i];
+    const priorY = p.mesh.position.y;
     p.mesh.position.addScaledVector(p.velocity, dt);
     const targets = p.attacker === player ? opponent : player;
     const dist = p.mesh.position.distanceTo(targets.mesh.position);
-    let hit = false;
-    if (dist < 0.9) {
-      pipeline.applyHit(p.attacker, targets, {
+    let impactPos = null;
+
+    if (dist < 0.9 && targets.isAlive()) {
+      const result = pipeline.applyHit(p.attacker, targets, {
         amount: p.effect.power ?? 10,
         knockback: p.velocity.clone().setY(0.2).normalize().multiplyScalar(3),
         origin: p.mesh.position.clone(),
         kind: 'projectile',
       });
-      hit = true;
+      handleEvents(p.attacker, targets, result.events);
+      impactPos = p.mesh.position.clone();
+    } else {
+      // wall/ground/rooftop impact — a missile that misses the opponent
+      // still splatters wherever it lands (OLIVE WEDGE's COAT MISSILE:
+      // "着弾時に周囲へ塗膜を散布する" — the payload isn't opponent-only)
+      const ground = city.resolveGroundHeight(p.mesh.position.x, p.mesh.position.z, priorY);
+      if (ground.blocked || p.mesh.position.y <= ground.height) {
+        impactPos = p.mesh.position.clone();
+        impactPos.y = Math.max(ground.height, 0);
+      }
     }
-    if (hit || now - p.bornAt > p.life) {
+
+    if (impactPos && p.effect.paintRadius) {
+      const tag = p.effect.useCurrentMode ? p.attacker.coatMode : p.effect.tag;
+      city.surfaceGrid.paint(impactPos.x, impactPos.z, p.effect.paintRadius, tag);
+      handleEvents(p.attacker, p.attacker, [{ type: 'surface_write', tag, x: impactPos.x, z: impactPos.z }]);
+    }
+
+    if (impactPos || now - p.bornAt > p.life) {
       scene.remove(p.mesh);
       p.mesh.geometry.dispose();
       p.mesh.material.dispose();
@@ -494,6 +538,7 @@ window.__game = {
     keysDown: Array.from(keys.down),
     fps: fpsEl.textContent,
     playerCharge: player && player.chargeStore ? player.chargeStore.value : null,
+    playerGauge: player ? player.specialGauge : null,
   }),
   getStairs: () => city.stairs.map((s) => ({ minX: s.minX, maxX: s.maxX, minZ: s.minZ, maxZ: s.maxZ, axis: s.axis, sign: s.sign, base: s.base, run: s.run, height: s.height })),
   getBuildings: () => city.buildings.map((b) => ({ x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1, h: b.h })),
@@ -502,5 +547,6 @@ window.__game = {
     return { min: box.min.toArray(), max: box.max.toArray(), size: box.getSize(new THREE.Vector3()).toArray() };
   },
   teleportPlayer: (x, y, z) => { player.mesh.position.set(x, y, z); player.velocity.set(0, 0, 0); },
+  setPlayerGauge: (v) => { player.specialGauge = v; },
   getEventLog: () => debugEventLog.slice(),
 };

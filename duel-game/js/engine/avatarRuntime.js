@@ -36,6 +36,9 @@ function applyPassiveEffect(combatant, entry, effect) {
     case 'charge_store':
       combatant.chargeStore = { value: 0, max: effect.max, rate: effect.rate, sources: effect.sources, id: entry.id };
       break;
+    case 'resource':
+      combatant.resources[effect.id] = { current: effect.max, max: effect.max };
+      break;
     case 'anchor':
       combatant.anchorConfig = {
         kbResistance: effect.kbResistance,

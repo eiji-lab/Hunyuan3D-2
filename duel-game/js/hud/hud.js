@@ -14,7 +14,13 @@ function resolveValue(combatant, source) {
       return { flag: combatant.anchor.active };
     case 'guardDurabilityPct':
       return combatant.guard ? { value: combatant.guard.durability, max: combatant.guard.maxDurability, broken: combatant.guard.broken } : null;
+    case 'coatMode':
+      return { text: combatant.coatMode.toUpperCase() };
     default:
+      if (source.startsWith('resource:')) {
+        const res = combatant.resources[source.slice('resource:'.length)];
+        return res ? { value: res.current, max: res.max } : null;
+      }
       return null;
   }
 }
@@ -86,6 +92,8 @@ export class HUD {
       if ('flag' in resolved) {
         el.textContent = resolved.flag ? 'ON' : 'off';
         el.classList.toggle('hud-flag-on', resolved.flag);
+      } else if ('text' in resolved) {
+        el.textContent = resolved.text;
       } else {
         el.textContent = `${Math.round(resolved.value)}/${Math.round(resolved.max)}`;
         el.classList.toggle('hud-flag-on', resolved.broken === true);

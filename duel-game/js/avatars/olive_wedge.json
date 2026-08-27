@@ -1,0 +1,89 @@
+{
+  "id": "olive_wedge",
+  "name": { "en": "OLIVE WEDGE", "ja": "オリーブ・ウェッジ" },
+  "color": { "name": "OLIVE", "hex": "#7d8f4a" },
+  "type": ["地形干渉型", "近〜中距離型"],
+  "level": 3,
+
+  "body": {
+    "locomotion": "ground",
+    "moveSpeed": 4.6,
+    "jump": 0.5,
+    "reach": 1.1,
+    "hp": 1250,
+    "mass": 1.5
+  },
+
+  "controls": [
+    { "slot": "mode_toggle", "key": "KeyL", "mode": "press", "label": "COAT MODE" },
+    { "slot": "primary", "key": "KeyJ", "mode": "press", "label": "TWIN ROLLER" },
+    { "slot": "secondary", "key": "KeyU", "mode": "press", "label": "COAT MISSILE" },
+    { "slot": "reverse", "key": "KeyI", "mode": "press", "label": "SURFACE REVERSE" },
+    { "slot": "special", "key": "KeyH", "mode": "press", "label": "SATURATION FIRE" }
+  ],
+
+  "hud": {
+    "customGauges": [
+      { "id": "coat_missile_ammo", "label": "MISSILE", "source": "resource:coat_missile_ammo" }
+    ],
+    "customFlags": [
+      { "id": "coat_mode", "label": "COAT MODE", "source": "coatMode" }
+    ]
+  },
+
+  "loadout": [
+    {
+      "level": 1,
+      "id": "surface_coat_mode",
+      "displayName": "SURFACE COAT (MODE)",
+      "layer": "ability",
+      "input": { "slot": "mode_toggle", "label": "COAT MODE" },
+      "effects": [
+        { "type": "self_state", "kind": "toggle_mode", "modes": ["grip", "slip"] }
+      ]
+    },
+    {
+      "level": 1,
+      "id": "surface_reverse",
+      "displayName": "SURFACE REVERSE",
+      "layer": "ability",
+      "input": { "slot": "reverse", "label": "SURFACE REVERSE" },
+      "effects": [
+        { "type": "global_flip", "mapping": { "grip": "slip", "slip": "grip" }, "cooldownMs": 1500 }
+      ]
+    },
+    {
+      "level": 1,
+      "id": "twin_roller",
+      "displayName": "TWIN ROLLER",
+      "layer": "gear",
+      "input": { "slot": "primary", "label": "TWIN ROLLER" },
+      "effects": [
+        { "type": "melee", "power": 13, "reach": 2.0, "arcDeg": 70, "windupMs": 260, "cooldownMs": 620, "knockback": 3, "weaponShape": "hammer" },
+        { "type": "surface_write", "useCurrentMode": true, "radius": 2.4 }
+      ]
+    },
+    {
+      "level": 2,
+      "id": "coat_missile",
+      "displayName": "COAT MISSILE",
+      "layer": "gear",
+      "input": { "slot": "secondary", "label": "COAT MISSILE" },
+      "effects": [
+        { "type": "resource", "id": "coat_missile_ammo", "max": 4 },
+        { "type": "projectile", "consumesResourceId": "coat_missile_ammo", "speed": 17, "power": 5, "lifeMs": 1800, "cooldownMs": 550, "paintRadius": 2.6, "useCurrentMode": true }
+      ]
+    },
+    {
+      "level": 3,
+      "id": "saturation_fire",
+      "displayName": "SATURATION FIRE",
+      "layer": "special",
+      "input": { "slot": "special", "label": "SATURATION FIRE" },
+      "gaugeCost": 65,
+      "effects": [
+        { "type": "projectile", "count": 5, "spreadDeg": 60, "speed": 15, "power": 3, "lifeMs": 1400, "cooldownMs": 4000, "paintRadius": 3.2, "useCurrentMode": true }
+      ]
+    }
+  ]
+}
