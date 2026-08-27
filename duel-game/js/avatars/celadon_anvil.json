@@ -63,7 +63,7 @@
           "arcDeg": 75,
           "windupMs": 300,
           "cooldownMs": 700,
-          "knockback": 7,
+          "knockback": 15,
           "weaponShape": "hammer",
           "attackMotion": "swing",
           "consumesChargeId": "impact_reserve",

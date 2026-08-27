@@ -33,6 +33,29 @@ const GRAVITY = 24;
 const FALL_SAFE_SPEED = 14;
 const FALL_DAMAGE_PER_SPEED = 6;
 
+// universal dodge — every avatar has this the same way every avatar has
+// jump; it's core movement, not a five-layer "ability", so it isn't
+// declared in any avatar JSON. Without SOME defensive option, combat is
+// just "walk into range, trade hits on cooldown" with no player agency.
+const DODGE_COOLDOWN_MS = 900;
+const DODGE_IMPULSE = 12;
+const DODGE_INVULN_MS = 260;
+
+// landing a clean hit should create a real opening — right now nothing
+// stopped the defender from just attacking back immediately, so "hitting
+// first" carried no advantage at all.
+const HITSTUN_MS = 380;
+
+// hit-stop: a brief near-freeze on impact. Cheap, and one of the most
+// reliable ways to make a hit read as having weight instead of two shapes
+// passing through each other.
+const HITSTOP_BASE_MS = 40;
+const HITSTOP_PER_DAMAGE = 1.4;
+const HITSTOP_MAX_MS = 140;
+const HITSTOP_SLOWDOWN = 0.06;
+
+const SHAKE_DURATION_MS = 180;
+
 // test-only simulation speedup (?turbo=N in the URL). Real play never sets
 // this; it exists so automated verification isn't bottlenecked by a
 // headless/no-GPU environment's render fps, which caps how much wall-clock
@@ -113,6 +136,16 @@ let matchState = 'loading'; // loading | select | countdown | battle | result
 let countdownRemaining = COUNTDOWN_SEC;
 let roundTimeRemaining = ROUND_TIME_SEC;
 const prevHeld = { player: new Set(), opponent: new Set() };
+let hitStopUntil = 0;
+let shakeUntil = 0;
+let shakeStrength = 0;
+
+function triggerHitFeedback(amount) {
+  const now = performance.now();
+  hitStopUntil = Math.max(hitStopUntil, now + Math.min(HITSTOP_MAX_MS, HITSTOP_BASE_MS + amount * HITSTOP_PER_DAMAGE));
+  shakeUntil = now + SHAKE_DURATION_MS;
+  shakeStrength = Math.min(0.35, 0.08 + amount * 0.006);
+}
 
 // -------------------------------------------------------------- avatar load
 async function preloadAvatars() {
@@ -205,13 +238,16 @@ function handleEvents(attacker, defender, events) {
     if (debugEventLog.length > 200) debugEventLog.shift();
     switch (ev.type) {
       case 'hit':
-        vfx.spawnBurst(defender.mesh.position.clone().add(new THREE.Vector3(0, 1.2, 0)), 0xffdd66);
+        vfx.spawnBurst(defender.mesh.position.clone().add(new THREE.Vector3(0, 1.2, 0)), 0xffdd66, 14, 5);
+        triggerHitFeedback(ev.amount ?? 10);
         break;
       case 'guard_block':
         vfx.spawnBurst(defender.mesh.position.clone().add(new THREE.Vector3(0, 1.3, 0)), 0x9fd0ff, 6, 3);
+        triggerHitFeedback((ev.reduced ?? 5) * 0.6);
         break;
       case 'guard_break':
         vfx.spawnBurst(defender.mesh.position.clone().add(new THREE.Vector3(0, 1.4, 0)), 0xffffff, 16, 6);
+        triggerHitFeedback(30);
         break;
       case 'prop_destroyed':
         vfx.spawnDebris(new THREE.Vector3(ev.x, 1, ev.z), 0xb5744a);
@@ -236,7 +272,26 @@ function handleEvents(attacker, defender, events) {
   }
 }
 
+function tryDodge(combatant, moveDir) {
+  const now = performance.now();
+  if (now < combatant.dodgeReadyAt) return false;
+  const dir = moveDir.lengthSq() > 0.01 ? moveDir.clone().normalize() : combatant.forwardVector();
+  combatant.velocity.x = dir.x * DODGE_IMPULSE;
+  combatant.velocity.z = dir.z * DODGE_IMPULSE;
+  combatant.dodgeReadyAt = now + DODGE_COOLDOWN_MS;
+  combatant.invulnerableUntil = now + DODGE_INVULN_MS;
+  combatant.hitstunUntil = 0; // a successful dodge cancels any stun already in progress
+  vfx.spawnBurst(combatant.mesh.position.clone().add(new THREE.Vector3(0, 0.5, 0)), 0xffffff, 10, 5);
+  return true;
+}
+
 function processInput(self, opponentRef, inputResult, prevHeldSet) {
+  // stunned by a landed hit: no abilities, no stance toggles. Movement and
+  // the dodge itself (handled separately, outside this gate) still work —
+  // being hit isn't a full-body freeze, just a "you can't act" punish
+  // window, matching HITSTUN_MS's purpose.
+  if (performance.now() < self.hitstunUntil) return;
+
   for (const entryId of inputResult.triggeredEntryIds) {
     const entry = self.activeLoadout.find((e) => e.id === entryId);
     if (!entry) continue;
@@ -319,8 +374,14 @@ function stepMovement(combatant, moveVec, wantsJump, dt) {
     combatant.velocity.z = moveVec.z * speed;
     if (wantsJump && combatant.grounded) combatant.velocity.y = combatant.jumpPower;
   } else {
-    combatant.velocity.x *= 0.88;
-    combatant.velocity.z *= 0.88;
+    // knockback needs to visibly carry the combatant across space to read
+    // as "sent flying" — a flat 0.88-per-frame decay was also frame-rate
+    // coupled (barely slowing at 30fps, stopping almost instantly at 60+),
+    // so this is now a real exponential decay against dt with a half-life
+    // long enough to still be moving for most of HITSTUN_MS.
+    const decay = Math.exp(-4.2 * dt);
+    combatant.velocity.x *= decay;
+    combatant.velocity.z *= decay;
   }
 
   combatant.velocity.y = Math.max(-28, combatant.velocity.y - GRAVITY * dt);
@@ -530,8 +591,9 @@ let lastTime = performance.now();
 function frame() {
   requestAnimationFrame(frame);
   const now = performance.now();
-  const dt = Math.min(0.05, (now - lastTime) / 1000) * TIME_SCALE;
+  let dt = Math.min(0.05, (now - lastTime) / 1000) * TIME_SCALE;
   lastTime = now;
+  if (now < hitStopUntil) dt *= HITSTOP_SLOWDOWN; // brief near-freeze on impact
 
   if (matchState === 'countdown') {
     countdownRemaining -= dt;
@@ -564,6 +626,8 @@ function frame() {
     if (matchState === 'battle') {
       processInput(player, opponent, playerInput, prevHeld.player);
       processInput(opponent, player, aiInput, prevHeld.opponent);
+      if (keys.wasPressed('ShiftLeft') || keys.wasPressed('ShiftRight')) tryDodge(player, playerMove);
+      if (aiInput.wantsDodge) tryDodge(opponent, aiInput.move);
       resolvePendingSwings();
       pipeline.tick([player, opponent]);
       stateManager.tick(dt, [player, opponent]);
@@ -583,7 +647,15 @@ function frame() {
     updatePassiveVisuals(opponent);
     updateProjectiles(dt);
     vfx.update(dt);
-    tpCamera.update(player.mesh.position, dt);
+    tpCamera.update(player.mesh.position, dt, opponent.isAlive() ? opponent.mesh.position : null);
+
+    if (now < shakeUntil) {
+      const life = (shakeUntil - now) / SHAKE_DURATION_MS;
+      const s = shakeStrength * life;
+      camera.position.x += (Math.random() - 0.5) * s;
+      camera.position.y += (Math.random() - 0.5) * s;
+      camera.position.z += (Math.random() - 0.5) * s;
+    }
 
     // a small FOV widening while sprinting — numbers alone (5-7 units/sec)
     // don't read as "fast" through a fixed-FOV third-person lens; games
@@ -628,6 +700,15 @@ window.__game = {
     fps: fpsEl.textContent,
     playerCharge: player && player.chargeStore ? player.chargeStore.value : null,
     playerGauge: player ? player.specialGauge : null,
+    playerVelocity: player ? player.velocity.toArray() : null,
+    opponentVelocity: opponent ? opponent.velocity.toArray() : null,
+    playerHitstunUntil: player ? player.hitstunUntil : null,
+    playerInvulnerableUntil: player ? player.invulnerableUntil : null,
+    opponentHitstunUntil: opponent ? opponent.hitstunUntil : null,
+    opponentInvulnerableUntil: opponent ? opponent.invulnerableUntil : null,
+    now: performance.now(),
+    hitStopUntil,
+    shakeUntil,
   }),
   getStairs: () => city.stairs.map((s) => ({ minX: s.minX, maxX: s.maxX, minZ: s.minZ, maxZ: s.maxZ, axis: s.axis, sign: s.sign, base: s.base, run: s.run, height: s.height })),
   getBuildings: () => city.buildings.map((b) => ({ x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1, h: b.h })),
@@ -636,6 +717,9 @@ window.__game = {
     return { min: box.min.toArray(), max: box.max.toArray(), size: box.getSize(new THREE.Vector3()).toArray() };
   },
   teleportPlayer: (x, y, z) => { player.mesh.position.set(x, y, z); player.velocity.set(0, 0, 0); },
+  teleportOpponent: (x, y, z) => { opponent.mesh.position.set(x, y, z); opponent.velocity.set(0, 0, 0); },
+  setOpponentMoveSpeed: (v) => { opponent.moveSpeedBase = v; },
+  setPlayerInvulnerableUntil: (ms) => { player.invulnerableUntil = ms; },
   setPlayerGauge: (v) => { player.specialGauge = v; },
   getEventLog: () => debugEventLog.slice(),
 };

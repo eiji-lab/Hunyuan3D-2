@@ -51,7 +51,7 @@
           "arcDeg": 45,
           "windupMs": 340,
           "cooldownMs": 720,
-          "knockback": 4,
+          "knockback": 9,
           "weaponShape": "lance",
           "attackMotion": "thrust"
         }

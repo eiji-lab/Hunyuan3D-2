@@ -42,6 +42,12 @@ export class Combatant {
     this.resources = {}; // resourceId -> { current, max } — e.g. OLIVE WEDGE's COAT MISSILE ammo
     this.coatMode = 'grip'; // OLIVE WEDGE's SURFACE COAT tag toggle; unused by avatars without it
 
+    // universal dodge — a movement capability every avatar has, like jump,
+    // not an "ability" in the five-layer sense, so it lives here rather
+    // than in any avatar's JSON loadout.
+    this.dodgeReadyAt = 0;
+    this.invulnerableUntil = 0;
+
     this.anchor = { active: false, kbResistance: 0, moveMultiplier: 1, turnMultiplier: 1 };
     this.buffs = [];
     this.stateSlots = [null, null];

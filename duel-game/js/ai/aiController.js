@@ -26,6 +26,10 @@ export function createAIState() {
     stuckTimer: 0,
     lastCheckedPos: new THREE.Vector3(),
     avoidSign: 1,
+    noticedSwing: null,
+    reactedSwing: null,
+    dodgeReactAt: 0,
+    dodgeWillReact: false,
   };
 }
 
@@ -81,7 +85,7 @@ function noisyDistance(trueDist, ai) {
 
 export function tickAI(ai, self, opponent, city, dt) {
   const move = new THREE.Vector3();
-  const result = { triggeredEntryIds: [], heldSlots: new Set(), move, wantsJump: false };
+  const result = { triggeredEntryIds: [], heldSlots: new Set(), move, wantsJump: false, wantsDodge: false };
 
   if (!self.isAlive() || !opponent.isAlive()) return result;
 
@@ -174,6 +178,32 @@ export function tickAI(ai, self, opponent, city, dt) {
       ai.anchorToggleAt = performance.now() + 600 + Math.random() * 800;
     }
     if (ai.anchorHeld) result.heldSlots.add(anchorEntry.input.slot);
+  }
+
+  // dodge reaction: notice an incoming windup with human reaction delay and
+  // imperfect awareness (not every swing gets noticed, and noticing doesn't
+  // guarantee a timely reaction) rather than a 100%-reliable instant dodge.
+  if (opponent.pendingSwing) {
+    if (ai.noticedSwing !== opponent.pendingSwing) {
+      ai.noticedSwing = opponent.pendingSwing;
+      ai.reactedSwing = null;
+      ai.dodgeReactAt = performance.now() + 140 + Math.random() * 220;
+      ai.dodgeWillReact = Math.random() < 0.6;
+    }
+    // firing needs a second look at the world after the reaction delay —
+    // but only ONE tick may land inside a short windup on a slow machine,
+    // so a "last chance" just before the swing actually resolves is the
+    // fallback that keeps this reachable even when frame rate is low,
+    // without shortening the human-like delay that makes it feel reactive
+    // at a normal frame rate.
+    const aboutToResolve = opponent.pendingSwing.triggerAt - performance.now() < 60;
+    if (ai.dodgeWillReact && ai.reactedSwing !== opponent.pendingSwing &&
+        (performance.now() >= ai.dodgeReactAt || aboutToResolve) && trueDist < primaryReach * 1.7) {
+      result.wantsDodge = true;
+      ai.reactedSwing = opponent.pendingSwing;
+    }
+  } else {
+    ai.noticedSwing = null;
   }
 
   if (move.lengthSq() > 0) {

@@ -59,7 +59,7 @@
       "layer": "gear",
       "input": { "slot": "primary", "label": "TWIN ROLLER" },
       "effects": [
-        { "type": "melee", "power": 13, "reach": 2.0, "arcDeg": 70, "windupMs": 260, "cooldownMs": 620, "knockback": 3, "weaponShape": "roller", "attackMotion": "press" },
+        { "type": "melee", "power": 13, "reach": 2.0, "arcDeg": 70, "windupMs": 260, "cooldownMs": 620, "knockback": 6.5, "weaponShape": "roller", "attackMotion": "press" },
         { "type": "surface_write", "useCurrentMode": true, "radius": 2.4 }
       ]
     },

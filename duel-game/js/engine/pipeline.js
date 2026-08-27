@@ -10,6 +10,9 @@ export const GAUGE_MAX = 100;
 const GAUGE_PER_DAMAGE_DEALT = 0.42;
 const GAUGE_PER_DAMAGE_TAKEN = 0.28;
 export const GAUGE_PER_PROP_DESTROYED = 9;
+// must match main.js's HITSTUN_MS — kept as a literal here since pipeline.js
+// has no import path back to the game loop's tuning constants.
+const HITSTUN_MS = 380;
 
 function withinGuardArc(defender, hitOrigin) {
   // no origin means no attack direction exists (e.g. fall damage) — a shield
@@ -29,6 +32,12 @@ export class DamagePipeline {
   applyHit(attacker, defender, hit) {
     const events = [];
     let amount = hit.amount;
+
+    // universal dodge i-frames — a successful dodge is a full miss, not a
+    // damage reduction; nothing else in the pipeline should even see it.
+    if (!hit.selfInflicted && performance.now() < defender.invulnerableUntil) {
+      return { amount: 0, events: [{ type: 'dodged' }] };
+    }
 
     // --- C group hook 1: guard ---
     const guard = defender.guard;
@@ -76,7 +85,7 @@ export class DamagePipeline {
     if (hit.knockback) {
       const resist = defender.anchor && defender.anchor.active ? defender.anchor.kbResistance : 0;
       defender.velocity.add(hit.knockback.clone().multiplyScalar(1 - resist));
-      defender.hitstunUntil = performance.now() + 200;
+      defender.hitstunUntil = performance.now() + HITSTUN_MS;
     }
 
     // special gauge accumulates from combat only — never from waiting.

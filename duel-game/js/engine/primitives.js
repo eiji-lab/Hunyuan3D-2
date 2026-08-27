@@ -87,7 +87,7 @@ export function resolveSwing(ctx, entry, effect) {
 
   if (target) {
     const forward = attacker.forwardVector();
-    const knockback = forward.clone().multiplyScalar(effect.knockback ?? 0).setY(0.15 * (effect.knockback ?? 0));
+    const knockback = forward.clone().multiplyScalar(effect.knockback ?? 0).setY(0.4 * (effect.knockback ?? 0));
     if (target.kind === 'combatant') {
       const result = ctx.engine.pipeline.applyHit(attacker, target.ref, {
         amount: power,
