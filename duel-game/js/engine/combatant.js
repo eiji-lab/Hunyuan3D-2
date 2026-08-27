@@ -30,7 +30,14 @@ export class Combatant {
     this.grounded = true;
     this.facingYaw = 0;
     this.moveSpeedBase = avatarData.body.moveSpeed;
-    this.jumpPower = avatarData.body.jump * 9;
+    // Old formula (body.jump * 9) topped out around 4.5-5.85 launch speed —
+    // against GRAVITY=24 that's an apex of only ~0.4-0.7 units, nowhere
+    // near primitives.js's MELEE_MAX_VERTICAL_DELTA (2.2) a jump would need
+    // to clear to actually dodge a ground-level swing. Jump was decorative.
+    // This targets a real apex (2.8-3.8 units, scaled by the avatar's own
+    // jump stat) while staying under main.js's FALL_SAFE_SPEED (14) so a
+    // flat-ground jump never triggers self fall damage on landing.
+    this.jumpPower = Math.sqrt(2 * 24 * (2.8 + avatarData.body.jump * 1.5));
     this.reach = avatarData.body.reach;
 
     // pipeline hook slots — populated by avatarRuntime from the loadout
