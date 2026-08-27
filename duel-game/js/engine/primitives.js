@@ -8,6 +8,12 @@
 
 import * as THREE from '../vendor/three.module.js';
 
+// A melee swing that ignores vertical separation would make height purely
+// a liability (fall damage exists) with no compensating defensive upside —
+// standing on a rooftop has to actually put you out of a street-level
+// opponent's melee reach, or "climb for advantage" never becomes real.
+const MELEE_MAX_VERTICAL_DELTA = 2.2;
+
 function findMeleeTarget(ctx, effect) {
   const origin = ctx.attacker.mesh.position;
   const forward = ctx.attacker.forwardVector();
@@ -25,6 +31,7 @@ function findMeleeTarget(ctx, effect) {
   let best = null;
   let bestDist = Infinity;
   for (const c of candidates) {
+    if (Math.abs(c.pos.y - origin.y) > MELEE_MAX_VERTICAL_DELTA) continue;
     const to = c.pos.clone().sub(origin);
     to.y = 0;
     const dist = to.length();

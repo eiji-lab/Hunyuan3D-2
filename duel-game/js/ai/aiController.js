@@ -136,6 +136,33 @@ export function tickAI(ai, self, opponent, city, dt) {
     }
   }
 
+  // ranged attack: any avatar with an input-mapped projectile ability (only
+  // OLIVE WEDGE's COAT MISSILE today, but this reads the loadout generically
+  // rather than naming it) gets used while closing distance, not just once
+  // adjacent — ammo-aware so the AI stops wasting attempts once it's dry.
+  const RANGED_ATTEMPTS_PER_SEC = 1.0;
+  const projectileEntries = self.activeLoadout.filter((e) => e.input && e.effects.some((fx) => fx.type === 'projectile'));
+  if (!retreating && projectileEntries.length) {
+    const entry = projectileEntries[0];
+    const effect = entry.effects.find((fx) => fx.type === 'projectile');
+    const hasAmmo = !effect.consumesResourceId || (self.resources[effect.consumesResourceId]?.current > 0);
+    const inRangedWindow = trueDist > primaryReach * 1.2 && trueDist < 16;
+    if (hasAmmo && inRangedWindow && self.cooldownReady(entry.id) && Math.random() < RANGED_ATTEMPTS_PER_SEC * dt) {
+      if (Math.random() < 0.7) result.triggeredEntryIds.push(entry.id);
+    }
+  }
+
+  // special move: any avatar with a gauge-gated special (only OLIVE WEDGE's
+  // SATURATION FIRE so far) fires it opportunistically once affordable —
+  // generic on entry.layer/gaugeCost, not on which avatar owns it.
+  const specialEntries = self.activeLoadout.filter((e) => e.input && e.layer === 'special' && e.gaugeCost);
+  if (!retreating && specialEntries.length) {
+    const entry = specialEntries[0];
+    if (self.specialGauge >= entry.gaugeCost && self.cooldownReady(entry.id) && trueDist < 18 && Math.random() < 0.6 * dt) {
+      result.triggeredEntryIds.push(entry.id);
+    }
+  }
+
   // anchor: brace when the opponent is close and not currently retreating,
   // release periodically rather than holding forever (jittered duty cycle)
   if (anchorEntry) {

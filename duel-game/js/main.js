@@ -300,7 +300,7 @@ function stepMovement(combatant, moveVec, wantsJump, dt) {
       if (excess > 0) {
         const amount = excess * FALL_DAMAGE_PER_SPEED;
         const result = pipeline.applyHit(combatant, combatant, {
-          amount, knockback: null, origin: null, kind: 'fall',
+          amount, knockback: null, origin: null, kind: 'fall', selfInflicted: true,
         });
         handleEvents(combatant, combatant, result.events);
         vfx.spawnBurst(next.clone().add(new THREE.Vector3(0, 0.2, 0)), 0xd8d8d0, 10, 3);

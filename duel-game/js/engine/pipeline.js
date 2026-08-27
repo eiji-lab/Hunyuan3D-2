@@ -79,8 +79,14 @@ export class DamagePipeline {
       defender.hitstunUntil = performance.now() + 200;
     }
 
-    // special gauge accumulates from combat only — never from waiting
-    attacker.specialGauge = Math.min(GAUGE_MAX, attacker.specialGauge + amount * GAUGE_PER_DAMAGE_DEALT);
+    // special gauge accumulates from combat only — never from waiting.
+    // Self-inflicted damage (fall damage: attacker === defender) only
+    // applies the "took damage" side — otherwise the same hit would stack
+    // both multipliers onto one combatant, making deliberately falling off
+    // a roof a more gauge-efficient move than actually getting hit.
+    if (!hit.selfInflicted) {
+      attacker.specialGauge = Math.min(GAUGE_MAX, attacker.specialGauge + amount * GAUGE_PER_DAMAGE_DEALT);
+    }
     defender.specialGauge = Math.min(GAUGE_MAX, defender.specialGauge + amount * GAUGE_PER_DAMAGE_TAKEN);
 
     events.push({ type: 'hit', amount, hp: defender.hp });

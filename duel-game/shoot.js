@@ -18,7 +18,7 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-const BASE_URL = process.env.SHOOT_BASE_URL || 'http://localhost:8934/index.html?turbo=4';
+const BASE_URL = process.env.SHOOT_BASE_URL || 'http://localhost:8934/index.html?turbo=8';
 const OUT_DIR = path.join(__dirname, 'screenshots');
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
@@ -99,7 +99,7 @@ async function shot(page, name) {
   await shot(page, '10_gauges_progressed');
 
   // wait for the match to resolve (KO or clock) — poll instead of guessing
-  const deadline = Date.now() + 150000;
+  const deadline = Date.now() + 180000;
   let ended = false;
   while (Date.now() < deadline) {
     const visible = await page.$eval('#hud-result', (el) => el.classList.contains('visible')).catch(() => false);
