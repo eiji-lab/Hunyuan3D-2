@@ -19,6 +19,20 @@ html, body {
   pointer-events: none;
 }
 
+.ability-hint {
+  position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%);
+  display: none; gap: 8px 16px; flex-wrap: wrap; justify-content: center;
+  max-width: 90vw; font-size: 12px; color: rgba(255,255,255,0.75);
+  background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 4px;
+  pointer-events: none;
+}
+.ability-hint.visible { display: flex; }
+.ability-hint-row { display: flex; align-items: center; gap: 6px; }
+.ability-hint-key {
+  padding: 1px 6px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 3px; font-family: monospace; font-weight: 700; font-size: 11px;
+}
+
 .crosshair-hint {
   position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
   font-size: 12px; letter-spacing: 0.04em; color: rgba(255,255,255,0.6);
@@ -78,7 +92,7 @@ html, body {
 
 .select-overlay { gap: 28px; flex-wrap: wrap; }
 .select-card {
-  width: 220px; padding: 22px 18px; background: rgba(20,24,26,0.9);
+  width: 240px; padding: 22px 18px; background: rgba(20,24,26,0.9);
   border: 2px solid var(--avatar-color, #888); border-radius: 6px;
   color: #eef2ee; cursor: pointer; text-align: center;
   transition: transform 0.12s ease;
@@ -91,6 +105,18 @@ html, body {
 .select-name { font-weight: 800; font-size: 16px; letter-spacing: 0.05em; }
 .select-sub { font-size: 12px; opacity: 0.7; margin: 2px 0 8px; }
 .select-type { font-size: 11px; opacity: 0.55; letter-spacing: 0.03em; }
+.select-controls {
+  margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.15);
+  display: flex; flex-direction: column; gap: 6px; text-align: left;
+}
+.select-control-row {
+  display: flex; align-items: center; gap: 10px; font-size: 12px; color: rgba(255,255,255,0.82);
+}
+.select-key {
+  flex: none; min-width: 26px; padding: 2px 6px; text-align: center;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 3px; font-family: monospace; font-weight: 700; font-size: 11px;
+}
 
 .countdown-text {
   font-size: 96px; font-weight: 900; letter-spacing: 0.05em;

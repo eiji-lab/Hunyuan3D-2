@@ -12,6 +12,10 @@ import { createAIState, tickAI } from './ai/aiController.js';
 import { HUD } from './hud/hud.js';
 import { loadBodyTemplate } from './engine/modelLoader.js';
 import { playSfx } from './engine/audio.js';
+import { EffectComposer } from './vendor/postprocessing/EffectComposer.js';
+import { RenderPass } from './vendor/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from './vendor/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from './vendor/postprocessing/OutputPass.js';
 
 const AVATAR_LIST = [
   { id: 'celadon_anvil', path: './js/avatars/celadon_anvil.json' },
@@ -48,14 +52,34 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+// filmic tone mapping is most of what separates a flat "webgl demo" look
+// from something with actual contrast/roll-off in the highlights — cheap
+// relative to any geometry/texture work, and it affects every material.
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 500);
+const BASE_FOV = 62;
+const camera = new THREE.PerspectiveCamera(BASE_FOV, window.innerWidth / window.innerHeight, 0.1, 500);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  0.55, // strength — kept low so it accents emissives (charge glow, coat
+        // sheen, projectiles) rather than blowing out lit windows/sky
+  0.4,  // radius
+  0.86, // threshold — only genuinely bright pixels bloom
+);
+composer.addPass(bloomPass);
+composer.addPass(new OutputPass()); // re-applies tone mapping + color space after the composer's linear passes
 
 function resize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+  composer.setSize(window.innerWidth, window.innerHeight);
+  bloomPass.setSize(window.innerWidth, window.innerHeight);
 }
 window.addEventListener('resize', resize);
 resize();
@@ -79,6 +103,7 @@ const overlaySelect = document.getElementById('select-overlay');
 const overlayCountdown = document.getElementById('countdown-overlay');
 const overlayCountdownText = document.getElementById('countdown-text');
 const overlayResult = document.getElementById('hud-result');
+const abilityHintEl = document.getElementById('ability-hint');
 const rematchBtn = document.getElementById('rematch-btn');
 
 let avatarDataCache = {};
@@ -95,6 +120,11 @@ async function preloadAvatars() {
   bodyTemplate = await loadBodyTemplate(); // null if the asset failed to load — Combatant falls back to primitives
 }
 
+function formatKeyLabel(code) {
+  if (code === 'Space') return 'SPACE';
+  return code.replace(/^Key/, '').replace(/^Digit/, '');
+}
+
 function setupSelectScreen() {
   overlaySelect.innerHTML = '';
   for (const a of AVATAR_LIST) {
@@ -102,11 +132,15 @@ function setupSelectScreen() {
     const btn = document.createElement('button');
     btn.className = 'select-card';
     btn.style.setProperty('--avatar-color', data.color.hex);
+    const controlsHtml = (data.controls || [])
+      .map((c) => `<div class="select-control-row"><span class="select-key">${formatKeyLabel(c.key)}</span><span>${c.label}</span></div>`)
+      .join('');
     btn.innerHTML = `
       <div class="select-swatch"></div>
       <div class="select-name">${data.name.en}</div>
       <div class="select-sub">${data.name.ja}</div>
-      <div class="select-type">${data.type.join(' / ')}</div>`;
+      <div class="select-type">${data.type.join(' / ')}</div>
+      <div class="select-controls">${controlsHtml}</div>`;
     btn.addEventListener('click', () => {
       overlaySelect.classList.remove('visible');
       startMatch(a.id);
@@ -114,6 +148,7 @@ function setupSelectScreen() {
     overlaySelect.appendChild(btn);
   }
   overlaySelect.classList.add('visible');
+  abilityHintEl.classList.remove('visible');
   matchState = 'select';
 }
 
@@ -149,6 +184,11 @@ function startMatch(playerId) {
   roundTimeRemaining = ROUND_TIME_SEC;
   matchState = 'countdown';
   overlayCountdown.classList.add('visible');
+
+  abilityHintEl.innerHTML = player.controls
+    .map((c) => `<span class="ability-hint-row"><span class="ability-hint-key">${formatKeyLabel(c.key)}</span>${c.label}</span>`)
+    .join('');
+  abilityHintEl.classList.add('visible');
 }
 
 rematchBtn.addEventListener('click', () => setupSelectScreen());
@@ -342,6 +382,15 @@ function updateCharacterAnimation(combatant, horizontalSpeed) {
   const punching = combatant.currentActionName === 'punch' && combatant.actions.punch?.isRunning();
   if (punching) return;
   combatant.playAnimation(horizontalSpeed > 0.4 ? 'run' : 'idle');
+
+  // Without this, the Running clip always plays at its own fixed pace
+  // regardless of how fast the combatant is actually translating — the
+  // classic "ice skating" tell (feet cycling out of sync with ground
+  // speed) that reads as no sense of speed even when the numbers are fine.
+  if (combatant.currentActionName === 'run' && combatant.actions.run) {
+    const REFERENCE_RUN_SPEED = 5.5;
+    combatant.actions.run.timeScale = THREE.MathUtils.clamp(horizontalSpeed / REFERENCE_RUN_SPEED, 0.7, 1.7);
+  }
 }
 
 function updatePassiveVisuals(combatant) {
@@ -431,7 +480,10 @@ function computeMoveVector() {
   // actually looking.
   const yaw = tpCamera.forwardYaw() + Math.PI;
   const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
-  const right = new THREE.Vector3(forward.z, 0, -forward.x);
+  // true on-screen right for this camera is cross(forward, up) — the
+  // previous (forward.z, 0, -forward.x) was that vector's negation, which
+  // made D strafe toward screen-left and A toward screen-right.
+  const right = new THREE.Vector3(-forward.z, 0, forward.x);
   const v = new THREE.Vector3();
   if (keys.isDown('KeyW')) v.add(forward);
   if (keys.isDown('KeyS')) v.sub(forward);
@@ -504,12 +556,21 @@ function frame() {
     updateProjectiles(dt);
     vfx.update(dt);
     tpCamera.update(player.mesh.position, dt);
+
+    // a small FOV widening while sprinting — numbers alone (5-7 units/sec)
+    // don't read as "fast" through a fixed-FOV third-person lens; games
+    // reliably sell speed with exactly this kind of subtle punch-in.
+    const playerSpeed = Math.hypot(player.velocity.x, player.velocity.z);
+    const targetFov = BASE_FOV + Math.min(6, playerSpeed * 0.7);
+    camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 6);
+    camera.updateProjectionMatrix();
+
     hud.update(player, opponent, roundTimeRemaining);
     checkRoundEnd();
   }
 
   keys.endFrame();
-  renderer.render(scene, camera);
+  composer.render(dt);
 
   fpsFrames++;
   if (now - fpsWindowStart >= 500) {
