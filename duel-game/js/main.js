@@ -362,11 +362,39 @@ function stepMovement(combatant, moveVec, wantsJump, dt) {
 
 function updateSwingAnimation(combatant, dt) {
   combatant.attackWindup = Math.max(0, combatant.attackWindup - dt * 2.4);
-  // the modeled body swings via its own 'Punch' skeletal clip (triggered in
-  // primitives.meleeAttack) — this manual socket-rotation hack is only for
-  // the primitive-box fallback body, which has no skeleton to animate it.
-  if (!combatant.mixer && combatant.weaponSocket) {
-    combatant.weaponSocket.rotation.x = -combatant.attackWindup * 1.25;
+  const t = combatant.attackWindup;
+
+  if (!combatant.mixer) {
+    // primitive-box fallback body has no skeleton to carry a Punch clip —
+    // this hack is the entire swing for that body type.
+    if (combatant.weaponSocket) combatant.weaponSocket.rotation.x = -t * 1.25;
+    return;
+  }
+
+  // Modeled body: the base 'Punch' clip moves the arm, but a lance thrusting
+  // and a hammer swinging and a roller pressing forward need to look
+  // different from each other, or every avatar just reads as "swinging a
+  // sword" regardless of what it's actually holding (Accel World's duels
+  // are not sword fights — see js/avatars/*.json's per-weapon
+  // attackMotion). This animates the weapon mesh itself, layered on top of
+  // whatever the hand bone is doing, using its rest pose as the baseline
+  // so it never fights or overwrites the bone animation.
+  const mesh = combatant.weaponMesh;
+  if (!mesh || !combatant.weaponBaseRotation) return;
+  const arc = Math.sin(t * Math.PI); // 0 -> 1 -> 0 across the attack
+  const base = combatant.weaponBaseRotation;
+  const baseZ = combatant.weaponBaseZ ?? 0;
+
+  if (combatant.attackMotion === 'thrust') {
+    mesh.position.z = baseZ + arc * 0.9; // extends straight out, no arc
+    mesh.rotation.set(base.x - arc * 0.1, base.y, base.z);
+  } else if (combatant.attackMotion === 'press') {
+    mesh.position.z = baseZ + arc * 0.4; // short forward press, not a swing
+    combatant.rollerSpin = (combatant.rollerSpin ?? 0) + dt * arc * 24;
+    mesh.rotation.set(base.x, base.y, base.z + combatant.rollerSpin); // grinding roll
+  } else {
+    mesh.position.z = baseZ;
+    mesh.rotation.set(base.x - arc * 1.2, base.y, base.z + arc * 0.4); // wide overhead-diagonal arc
   }
 }
 

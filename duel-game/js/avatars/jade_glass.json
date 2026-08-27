@@ -52,7 +52,8 @@
           "windupMs": 340,
           "cooldownMs": 720,
           "knockback": 4,
-          "weaponShape": "lance"
+          "weaponShape": "lance",
+          "attackMotion": "thrust"
         }
       ]
     },

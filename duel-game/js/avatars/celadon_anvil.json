@@ -65,6 +65,7 @@
           "cooldownMs": 700,
           "knockback": 7,
           "weaponShape": "hammer",
+          "attackMotion": "swing",
           "consumesChargeId": "impact_reserve",
           "chargeBonusRatio": 1.0
         }

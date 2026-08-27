@@ -60,22 +60,36 @@ function applyPassiveEffect(combatant, entry, effect) {
   }
 }
 
+// Accel World duels are not sword fights — canon avatars fight barehanded,
+// by flight, by piston-driven rams, etc., and none of these three carry a
+// blade. The shape AND the swing motion (see attackMotion / main.js
+// updateSwingAnimation) both need to say "hammer" / "lance" / "roller",
+// not just differ by a texture — a lance that swings like a sword still
+// reads as a sword.
 function attachWeaponVisual(combatant, entry, effect) {
-  const geo = effect.weaponShape === 'lance'
-    ? new THREE.CylinderGeometry(0.05, 0.09, effect.reach * 0.95, 8)
-    : new THREE.BoxGeometry(0.32, 0.32, effect.reach * 0.8);
   const mat = new THREE.MeshStandardMaterial({ color: combatant.color.clone().multiplyScalar(1.3), roughness: 0.4, metalness: 0.5 });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.castShadow = true;
+  let mesh;
   if (effect.weaponShape === 'lance') {
+    mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.09, effect.reach * 0.95, 8), mat);
     mesh.rotation.x = Math.PI / 2;
     mesh.position.z = effect.reach * 0.45;
+  } else if (effect.weaponShape === 'roller') {
+    // OLIVE WEDGE's TWIN ROLLER is a forearm-mounted drum, not a held
+    // stick — short, thick, and close to the hand rather than out at
+    // lance/hammer reach.
+    mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.55, 14), mat);
+    mesh.rotation.z = Math.PI / 2;
+    mesh.position.z = effect.reach * 0.2;
   } else {
+    mesh = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.32, effect.reach * 0.8), mat);
     mesh.position.z = effect.reach * 0.35;
   }
+  mesh.castShadow = true;
   combatant.weaponSocket.add(mesh);
   combatant.weaponMesh = mesh;
   combatant.weaponBaseZ = mesh.position.z;
+  combatant.weaponBaseRotation = mesh.rotation.clone();
+  combatant.attackMotion = effect.attackMotion ?? 'swing';
 }
 
 export function buildCombatant(avatarData, level, scene, bodyTemplate) {
