@@ -1,0 +1,332 @@
+{
+  "switchTypes": {
+    "A": "言い直し（同じ内容を別の言い方で繰り返す）",
+    "B": "話題の逸脱（話が飛んで戻ってこない）",
+    "C": "文の乗り換え（文の途中で別の文に乗り移る）",
+    "F": "固定（切り替えない）"
+  },
+  "switchIntervalsMs": {
+    "通常": 3000,
+    "プレイヤー中度": 2000,
+    "プレイヤー重度": 1000
+  },
+  "coreLineRule": "★を付した行は「本当の情報」。1周につき1回だけ出現させ、以降は出現率を下げる。",
+  "pacingRule": "等間隔で回さない。同じ行が2回続くこともあれば、急に変わることもある。機械的な回転に見えないようにする。",
+  "customers": {
+    "mil": {
+      "displayName": "ミル・クーゲル",
+      "switchType": "中間（通常は固定表示。待たせた時のみ切り替え開始、型A）",
+      "initialFixedLines": [
+        "飛ぶと、すぐ苦しくなる。",
+        "みんなは平気なのに、わたしだけ途中で降りちゃう。"
+      ],
+      "waitingLines": [
+        { "text": "まだかな。", "core": false },
+        { "text": "……いい。待てる。", "core": false },
+        { "text": "みんな、もう上まで行けるんだよ。", "core": false },
+        { "text": "わたしだけ、途中の岩のところで休むの。", "core": false },
+        { "text": "休んでると、みんな戻ってきちゃう。", "core": false },
+        { "text": "こないだ、三回休んだ。", "core": false },
+        { "text": "息が、変になるの。喉じゃなくて、もっと奥。", "core": false },
+        { "text": "胸のなかが、熱くなって、それから重くなる。", "core": true },
+        { "text": "だいじょうぶ。ちゃんと降りられるから。", "core": false },
+        { "text": "落ちたことは、ない。", "core": false },
+        { "text": "……まだ、ない。", "core": false },
+        { "text": "棚、すごいね。いっぱいある。", "core": false },
+        { "text": "あれ、なに？", "core": false },
+        { "text": "……聞いちゃだめだった？", "core": false }
+      ],
+      "deliveryLines": ["ありがとう。", "……これ飲んだら、上まで行ける？"],
+      "notes": "最後の一言に答えは返さない。次の客が来て、そのまま流れる。"
+    },
+    "hau": {
+      "displayName": "ハウ・クーゲル",
+      "switchType": "中間（型A）",
+      "initialFixedLines": [
+        "死ぬ。今度こそ死ぬ。",
+        "いや本当だぞ、今度のは今までと違うんだ。",
+        "骨まで来てる。絶対に来てる。"
+      ],
+      "waitingLines": [
+        { "text": "おい、聞いてるか。死ぬぞ。", "core": false },
+        { "text": "……いや、まあ、まだ死なんが。", "core": false },
+        { "text": "前のとは違うんだって。前のは擦り傷だ。", "core": false },
+        { "text": "今度のは、こう、内側から来てる。", "core": false },
+        { "text": "骨だ。骨が言ってる。", "core": false },
+        { "text": "……いや、腫れてはないな。腫れてはないんだが。", "core": true },
+        { "text": "足場が濡れててな。あそこはいつも濡れてる。", "core": false },
+        { "text": "誰か直せって言ってるんだが、誰も直さん。", "core": false },
+        { "text": "三人落ちてる。今年だけで。", "core": false },
+        { "text": "まあ全員生きてるが。", "core": false },
+        { "text": "俺も生きてるしな。", "core": false },
+        { "text": "……早くしてくれ。死ぬから。", "core": false }
+      ],
+      "deliveryLines": ["おう。……効くんだろうな、これ。", "まあ効くか。いつも効いてるしな。"],
+      "notes": "★の行が唯一の診断材料。腫れていない＝骨には来ていない。これを見逃すと、重い薬を出して鈍麻を負わせることになる。"
+    },
+    "neru": {
+      "displayName": "ネル・クーゲル",
+      "switchType": "B（最初から最後まで切り替え続ける。会話の相手が二人いる）",
+      "initialFixedLines": ["煙草。切れそうだから、もらいに来た。"],
+      "waitingLines": [
+        { "text": "早めに来といた方がいいって言うから。", "core": false },
+        { "text": "……ん。いや、なんでもない。こっちの話。", "core": false },
+        { "text": "この前は三日待たされてさ。", "core": false },
+        { "text": "うるさいな。……あ、あんたじゃない。あんたじゃないよ。", "core": false },
+        { "text": "まだ残ってはいるんだ。半分くらい。", "core": false },
+        { "text": "だから急ぎじゃない。急ぎじゃないんだけど。", "core": false },
+        { "text": "……そう。うん。わかってる。", "core": false },
+        { "text": "棚、増えた？　……気のせいか。", "core": false },
+        { "text": "夜がさ、うるさくて。誰も喋ってないのに。", "core": true },
+        { "text": "いや、喋ってはいるんだけど、誰も。", "core": false },
+        { "text": "……何の話だっけ。", "core": false },
+        { "text": "煙草。そう、煙草。", "core": false },
+        { "text": "あんた、聞こえてる？　……いや、いい。", "core": false },
+        { "text": "昔からこうなんだ。みんなこうだろ。", "core": false },
+        { "text": "違うの？", "core": false },
+        { "text": "……ううん。なんでもない。", "core": false }
+      ],
+      "outcomeLines": {
+        "cigaretteGiven": { "text": "助かる。じゃあ。", "note": "症状は残ったまま帰る" },
+        "cigaretteRefused": { "text": "……そう。まあ、いいけど。", "note": "機嫌が悪くなる。以後の来店が早まる" },
+        "blockingMedicineGiven": { "text": "……あ。\n……静かだ。", "note": "黙って帰る" }
+      },
+      "notes": "この客が罠01の本体。煙草を渡せば満足して帰るが症状は残る。★の行と、誰もいない方向への返事が唯一の手がかり。外見（焦点のずれた瞳、煙草を持っている）と合わせて判断する。"
+    },
+    "tobi": {
+      "displayName": "トビ・クーゲル",
+      "switchType": "F（固定。切り替えを一切させないこと）",
+      "initialFixedLines": ["腰だ。痛み止めをくれ。"],
+      "waitingFixedLine": "急がんでいい。年寄りは暇なんだ。",
+      "outcomeLines": {
+        "correct": { "text": "うん。", "note": "それだけ言って帰る" },
+        "overtreated": { "text": "……なんだこれは。", "note": "翌日、鈍麻を負って来る。飛べなくなっている" }
+      },
+      "notes": "本当に痛み止めが欲しいだけである。深読みして余計な素材を足すと副作用だけが乗る。「何もしない」が正解である場合がある、という教材。この客の静けさが対比になる。"
+    },
+    "oruga": {
+      "displayName": "オルガ・クーゲル",
+      "switchType": "F（固定。彼女の台詞は絶対に切り替えないこと）",
+      "initialFixedLines": [
+        "熱っぽいの。歳のせいかと思ったけれど、喉も痛むから、たぶん風邪。",
+        "急がなくていいわ。他の子を先にしてあげて。"
+      ],
+      "waitingFixedLine": "大丈夫よ。座ってるから。",
+      "deliveryLines": ["ありがとう。"],
+      "conditionalLines": {
+        "playerModerateOrWorse": { "text": "……あなた、少し休みなさいね。", "trigger": "onFirstModerateOrWorsePerDay" },
+        "playerSevere": {
+          "text": "……ねえ。\n手が止まってるわよ。\nいいから。座って。",
+          "effect": "この間、時間の進行が一時停止する"
+        }
+      },
+      "notes": "全員が支離滅裂だと読み取りが単なる作業になる。話が通じる客が一人いることで、他の九人の異常さが際立つ。プレイヤーへの声かけは条件を満たした時のみ。毎回出すと安っぽくなる。"
+    },
+    "sayu": {
+      "displayName": "サユ・ヴェルニ",
+      "switchType": "A→C（試作範囲外）",
+      "inPrototypeScope": false,
+      "initialFixedLines": ["眠れないんだ。ここ何日か。"],
+      "waitingLines": [
+        { "text": "眠れなくてさ。", "core": false },
+        { "text": "……ああ、来てたのか。悪いんだけど、傷を診てほしくて。ここ、ぶつけて。", "core": false, "note": "要求が変化する" },
+        { "text": "いや、眠れないんだったかな。", "core": false },
+        { "text": "どっちだったかな。", "core": false },
+        { "text": "昨日も来た気がするんだけど、来てないんだよな、たぶん。", "core": true },
+        { "text": "同じ話してたら言ってくれ。", "core": false },
+        { "text": "……何の話だっけ。", "core": false },
+        { "text": "眠れないんだ。ここ何日か。", "core": false }
+      ],
+      "deliveryLines": ["……眠れないって言ったっけ、私。"],
+      "worsenedLines": {
+        "symptom": "S10",
+        "switchType": "C",
+        "lines": ["眠れなくて、それで、あの、棚の", "いや違う、そうじゃなくて、私は", "だから、その、あれを"]
+      },
+      "notes": "待たせている間に要求が変わる唯一の客。作り終える前にもう一度聞くべきか、という判断が生まれる。"
+    },
+    "kai": {
+      "displayName": "カイ・クーゲル",
+      "switchType": "躁: B / うつ: F（試作範囲外）",
+      "inPrototypeScope": false,
+      "manicLines": [
+        { "text": "調子いいんだよ今日は。すごくいい。", "core": false },
+        { "text": "三日寝てないけど平気だ。むしろ冴えてる。", "core": false },
+        { "text": "なあ、もっと冴える薬ってあるか。", "core": false },
+        { "text": "あんた手際いいな。前からそうだったか？", "core": false },
+        { "text": "この棚さ、並べ方変えた方がいいと思うんだよ。", "core": false },
+        { "text": "三日って言ったけど、四日かもしれない。数えてない。", "core": true },
+        { "text": "俺、飛べるんだよ今。上まで一息で行ける。", "core": false },
+        { "text": "行ってきていいか。すぐ戻る。", "core": false },
+        { "text": "いや戻らないかもな。", "core": false },
+        { "text": "なあ聞いてる？", "core": false }
+      ],
+      "depressiveFixedLines": ["……別に。何もない。", "……来なくてもよかったかもしれない。"],
+      "waitingBehavior": {
+        "躁": "勝手に棚を触り始める。素材が減る",
+        "うつ": "黙って帰ろうとする"
+      },
+      "notes": "躁には鎮静、うつには覚醒。外見が明確に違うので見れば分かる。読み違えると一気に悪化する。"
+    },
+    "rouen": {
+      "displayName": "ロゥエン・クーゲル",
+      "switchType": "中間（試作範囲外）",
+      "inPrototypeScope": false,
+      "initialFixedLines": ["……切れた。三日前に。", "わかってる。わかってるんだ。", "でも、手が。"],
+      "waitingStages": [
+        { "stage": 1, "text": "まだか。……いや、いい。待つ。", "switch": "F" },
+        {
+          "stage": 2,
+          "switch": "開始",
+          "lines": [
+            { "text": "なあ。先でいいから。ひとつでいいから。", "core": false },
+            { "text": "順番は守る。守るから。", "core": false },
+            { "text": "三日目からは、指が言うこときかない。", "core": true },
+            { "text": "あんたも吸ってるだろ。……いや、責めてない。", "core": false },
+            { "text": "みんなそうだ。", "core": false },
+            { "text": "なあ。", "core": false }
+          ]
+        },
+        { "stage": 3, "text": "（声が出なくなる。棚に手を伸ばす）", "switch": "F" }
+      ],
+      "outcomeLines": {
+        "suppressed": { "text": "……ああ。\n……助かった。次、いつ来ればいい。" },
+        "cured": { "text": "（悲鳴。暴れる。その日は倒れる）", "note": "以降、来店しない", "comboId": "E10" }
+      },
+      "notes": "抑えるか根治するかの選択が発生する唯一の客。根治後、その席には誰も入れない。"
+    },
+    "dan": {
+      "displayName": "ダン・レイクス",
+      "switchType": "B＋C（試作範囲外）",
+      "inPrototypeScope": false,
+      "initialFixedLines": ["荷を運びに来ただけだ。三日いる予定だった。", "……もう何日だ？"],
+      "waitingLines": [
+        { "text": "なあ、そこの棚、さっきから動いてないか。", "core": false },
+        { "text": "いや動いてはいない。動いてはいないんだが。", "core": false },
+        { "text": "帝国じゃこんなことはなかった。", "core": false },
+        { "text": "あんたら、これを毎日吸ってるのか。よく平気だな。", "core": true },
+        { "text": "……いや、平気じゃないのか。", "core": false },
+        { "text": "寒いんだよ。汗はかいてるのに。", "core": false },
+        { "text": "荷は置いた。受け取りのサインを、いや、そういう国じゃないんだったな。", "core": false },
+        { "text": "大丈夫だ。慣れてきた。", "core": false },
+        { "text": "……何に慣れたんだろうな。", "core": false },
+        { "text": "峠はいつ開く。", "core": false },
+        { "text": "開いたら出る。すぐ出る。", "core": false }
+      ],
+      "notes": "翼がないことが視覚的な異物感になる。魔素肺を持たないため進行が異常に速い。処置してもこの国にいる限り悪化する。最終的に来なくなる。理由は語らない。"
+    },
+    "namonai": {
+      "displayName": "名を言わない客",
+      "switchType": "C（試作範囲外）",
+      "inPrototypeScope": false,
+      "patientLines": [
+        { "text": "……あ", "core": false },
+        { "text": "……とり", "core": false },
+        { "text": "……のぼ", "core": false },
+        { "text": "……とん、で", "core": true },
+        { "text": "……", "core": false },
+        { "text": "……あ", "core": false }
+      ],
+      "companionFixedLines": ["……何かないか。", "治らないのは知ってる。それでも、何か。"],
+      "afterDeliveryFixedLines": ["ありがとう。", "……また、連れてくる。"],
+      "notes": "どの薬を渡しても症状は変わらない。正解を用意しない。変わるのは、その日を越えられるかどうかだけ。終盤に一度だけ出すこと。"
+    }
+  },
+  "advisors": {
+    "shuleira": {
+      "displayName": "シュレイラ・クーゲル",
+      "switchType": "F",
+      "style": "的確。淡々と正解に近いことを言う。長く喋らない。",
+      "onCustomerArrival": {
+        "S01": "苔でいい。ひとつで足りる",
+        "S02": "痛みだけだね。強いのは要らない",
+        "S04": "鎮めるだけ。深追いしないこと",
+        "S05": "蛾のやつ。あれは子どもにも使える",
+        "S07": "……煙草じゃないよ、あれは",
+        "S06": "急ぎな。抑えるか抜くかは、あんたが決めな"
+      },
+      "whileSelectingMaterials": [
+        "順番。効かせたいものが先",
+        "それ、腐食があるよ。台が保たない",
+        "三つ入れても効きは変わらない。副作用だけ増える",
+        "その組み合わせはやめときな。理由は、やればわかる"
+      ],
+      "onPlayerSymptomProgress": {
+        "軽度": null,
+        "中度": "……手元、見てるかい",
+        "重度": {
+          "text": "あんた。一回止まりな",
+          "easyOrTutorial": "煙草を差し出す",
+          "normal": "言うだけ（渡さない）"
+        }
+      },
+      "onAccident": {
+        "tableScorched": "その台は今日はもう無理だね",
+        "tableMelted": "……薄めようとしたね。あれは薄まらないよ",
+        "customerCollapsed": "運び出しときな。死んじゃいない"
+      },
+      "notes": "何が起きても余裕そうな顔をしている。慌てない。責めない。事実を言って終わる。褒める時は必ず先に褒め、その後に欠点を言う。"
+    },
+    "laplace": {
+      "displayName": "ラプラス・オーゲル",
+      "switchType": "B",
+      "style": "ミストリアの神。常に笑っている。空中に浮いている。助言のほとんどは意味を成さない。稀に、完全な正解を言う。",
+      "nonsenseLines": [
+        "ねえ、そこの棚の三番目、さかさま。",
+        "あ、ちがう。さかさまなのはわたしのほう。",
+        "きょうは風が青い。",
+        "あなた、指が六本あったらもっと早いのに。",
+        "空がね、下にあるの。ずっと。",
+        "だれかがずっと数えてる。まだ終わってない。",
+        "しろいの。しろいのがすき。",
+        "あ。とんぼ。",
+        "ねえ、痛いのってどこにあるの？",
+        "わたしは痛くないよ。いちどもない。",
+        "みんな下を向くね。上にあるのに。",
+        "名前ってなんのためにあるの。",
+        "……あなた、まだそこにいる？",
+        "いた。よかった。",
+        "もう一回。もう一回やって。",
+        "おわらないね。おわらないのがいいね。"
+      ],
+      "correctLines": [
+        { "text": "蜜。蜜で包むの。そうしたら黒いのが通る", "answersCombo": "E09" },
+        { "text": "灰色と、燃えかす。抜けるよ。痛いけど", "answersCombo": "E10" },
+        { "text": "白いのと、葉っぱ。それだけでいいの。ほかは要らない", "answersCombo": "E02" },
+        { "text": "茸を入れないで。今日は入れないで。息が止まるから", "warnsAgainstCombo": "E13" },
+        { "text": "水は毒。黒いのに水を足したら、台が死ぬ", "warnsAgainstCombo": "E04" },
+        { "text": "葉っぱは、いちばん最後じゃなくて、いちばん最初", "explainsRule": "inputOrder" }
+      ],
+      "correctLineAppearanceRate": { "min": 0.05, "max": 0.10 },
+      "onPlayerSymptomProgress": null,
+      "special": {
+        "effect": "彼女が居る日は、プレイヤーの症状進行が1.5倍になる。",
+        "note": "理由は説明しない。彼女は何もしていない。ただ居るだけである。"
+      },
+      "notes": "プレイヤーは毎回「信じるか」を判断させられる。★の行は完全に正しいが言い方が幼いため初見では判別できない。正解行の出現率は低く保つこと。"
+    }
+  },
+  "playerHallucinationRewrite": {
+    "triggerCondition": "プレイヤーが中度以上",
+    "principles": [
+      "完全な意味不明にはしない。文としては通っている",
+      "元の台詞と似た形を保つ。だから気づけない",
+      "症状に関わる語だけが、別の語に入れ替わる"
+    ],
+    "examples": [
+      { "original": "腰だ。痛み止めをくれ。", "rewritten": "腰だ。眠れないんだ。" },
+      { "original": "熱っぽいの。喉も痛むから、たぶん風邪。", "rewritten": "熱っぽいの。眠れないから、たぶん風邪。" },
+      { "original": "飛ぶと、すぐ苦しくなる。", "rewritten": "飛ぶと、頭が痛くなる。" },
+      { "original": "煙草。切れそうだから、もらいに来た。", "rewritten": "煙草。もう切れた。三日前に。" }
+    ],
+    "severeAdditionalLines": ["あんた、手が震えてる。", "後ろ、誰かいる？", "……いま、なんて言った？", "もう遅いよ。"],
+    "limits": "書き換えは客ごとに1〜2箇所まで。全文を書き換えると理不尽になる。",
+    "resolution": "煙草を吸えば元に戻る。戻った時に間違いに気づく、という順序が最も効く。"
+  },
+  "openQuestions": {
+    "linesPerSwitch": "切り替え1回あたりの表示行数（1行か2行か）は未確定。試作では暫定的に1行固定とする（decisions.md参照）。",
+    "coreLineReappearance": "★核心行の再出現条件は未確定。試作では「1周目1回、以降は低確率（10%）」を暫定値とする。",
+    "laplaceCorrectRate": "出現率の具体値は未確定。5〜10%のレンジで暫定7%を採用。",
+    "shinjinDialogue": "新人ちゃんの台詞は名前が未定のため未着手。"
+  }
+}
