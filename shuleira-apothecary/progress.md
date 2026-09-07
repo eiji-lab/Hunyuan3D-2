@@ -3,24 +3,27 @@
 再開時は必ず: 1) work_brief を読み直す → 2) このファイル → 3) decisions.md → 4) 続きから再開。
 
 ## 現在の段階
-第1段階（データ層）: 作業中
+第1段階（データ層）: 完了 → 第2段階（調合ロジックエンジン）に着手
 
 ## 完了した項目
 - プロジェクト土台（package.json / tsconfig.json / vite.config.ts）作成
-- decisions.md 初版（配置場所・技術スタック・スキーマ設計・保留事項D01〜D06, P01〜P07）
+- decisions.md（配置場所・技術スタック・スキーマ設計・D01〜D08, P01〜P07）
+- src/data/*.json 全8ファイル（materials, combos, symptoms, customers, dialogue,
+  advisors, events, progression）。いずれも node -e で JSON構文確認済み。
+  - materials 22件 / combos 14件(E03予約込み) / symptoms 12件 / customers 10件
+  - dialogue: customers 10件 + advisors 2件（シュレイラ/ラプラス）
+  - advisors 5件（シュレイラ/ルヴィーネ/ラプラス/新人ちゃん/誰もいない日）
+  - events 6件 / progression: 7日分のdayCurve
 
 ## 作業中の項目
-- src/data/*.json の作成（第1段階）
-  - [x] materials.json（素材22種）JSON構文確認済み
-  - [x] combos.json（例外14種、E03は予約のみ）JSON構文確認済み
-  - [x] symptoms.json（症例12種）JSON構文確認済み
-  - [x] customers.json（客10種）JSON構文確認済み
-  - [ ] dialogue.json（台詞：客10種＋助言役2名分＋幻聴書き換え規則）← 次はここ
-  - [ ] advisors.json（助言役4名、うち2名は試作範囲外フラグ）
-  - [ ] events.json（供給イベント6種）
-  - [ ] progression.json（難易度カーブ、試作は1〜7日想定）
+- 第2段階：調合ロジックエンジン（src/engine/）
+  - [ ] 型定義（src/engine/types.ts）
+  - [ ] 薬効・副作用の加算、投入順の重み付け、同一素材3つ以上の頭打ち
+  - [ ] 例外14種の判定
+  - [ ] 症例充足判定・致死判定
+  - [ ] 副作用蓄積の再来時持ち越し
 
 ## 次にやること
-1. dialogue.json を作成する（台詞データv1.0の全文を型A/B/C/F・核心行フラグ付きで転記）
-2. advisors.json, events.json, progression.json を作る
-3. 第1段階完了後、第2段階（調合ロジックエンジン）に着手
+1. src/engine/types.ts で調合結果・素材・症例などの型を定義
+2. src/engine/compound.ts で調合ロジックを実装
+3. 実装後すぐ tests/engine.test.ts で第4段階前半の検証を書く（UIより先）

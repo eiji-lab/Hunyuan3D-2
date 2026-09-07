@@ -1,0 +1,107 @@
+{
+  "note": "難易度は数値ではなく状況（誰が居ないか・何が足りないか）で表現する。試作は7日固定。バランス検証（第4段階）の結果に応じて数値は調整可能。",
+  "prototypeDurationDays": 7,
+  "tableCount": 3,
+  "maxConcurrentCustomers": 3,
+  "tableDamage": {
+    "corrosionThreshold": 3,
+    "rule": "投入した素材の腐食strengthの合計が閾値に達すると、その台はその日使用不可（黒く焦げた見た目のまま残る）。翌朝リセットされる。",
+    "immediateDestroyCombos": ["E04"]
+  },
+  "playerSymptom": {
+    "meterMax": 100,
+    "stages": [
+      { "id": "healthy", "name": "健康", "min": 0, "max": 19 },
+      { "id": "mild", "name": "軽度", "min": 20, "max": 44, "effect": "視界が揺れる。文字がぶれる。読めるが読みづらい" },
+      { "id": "moderate", "name": "中度", "min": 45, "max": 74, "effect": "幻聴。実際には言われていない要求が聞こえる。台詞の切り替え間隔が短くなる（2秒）" },
+      { "id": "severe", "name": "重度", "min": 75, "max": 94, "effect": "幻覚。表示されている薬・素材の内容が実際と食い違う。台詞の切り替え間隔が最短になる（1秒）" },
+      { "id": "critical", "name": "限界", "min": 95, "max": 100, "effect": "操作が奪われる（数秒間）。素材を全て投入する、客を殴るなどの暴走" }
+    ],
+    "progressPerSecond": 0.4,
+    "mistakeRateByStage": {
+      "healthy": 0,
+      "mild": 0.05,
+      "moderate": 0.15,
+      "severe": 0.3,
+      "critical": 1.0
+    },
+    "mistakeEffects": ["投入順が入れ替わる", "分量が増える", "掴んだ素材が別のものになる"],
+    "criticalDurationSeconds": 4,
+    "smokeReliefAmount": 45,
+    "smokeDurationSeconds": 3,
+    "smokeStopsCompounding": true,
+    "laplacePresentMultiplier": 1.5
+  },
+  "tobacco": {
+    "uses": ["selfSmoke", "giveToAgitatedCustomer", "giveToRequestingCustomer"],
+    "refusalEffect": "客の機嫌が悪くなる（以後の来店が早まる）"
+  },
+  "dayCurve": [
+    {
+      "day": 1,
+      "advisorId": "shuleira",
+      "tobaccoRation": 10,
+      "customersPerDay": 3,
+      "customerPool": ["C01", "C04", "C09"],
+      "supplyEventChance": 0,
+      "note": "チュートリアル寄り。ミル・トビ・オルガのみ（罠なし＋固定表示中心）"
+    },
+    {
+      "day": 2,
+      "advisorId": "shuleira",
+      "tobaccoRation": 9,
+      "customersPerDay": 4,
+      "customerPool": ["C01", "C02", "C04", "C09"],
+      "supplyEventChance": 0.15,
+      "note": "ハウ追加（過大申告の罠）"
+    },
+    {
+      "day": 3,
+      "advisorId": "laplace",
+      "tobaccoRation": 8,
+      "customersPerDay": 4,
+      "customerPool": ["C01", "C02", "C03", "C04", "C09"],
+      "supplyEventChance": 0.25,
+      "note": "ネル追加（過小申告の罠）。助言役がラプラスに交代し不確実性が増す"
+    },
+    {
+      "day": 4,
+      "advisorId": "shuleira",
+      "tobaccoRation": 8,
+      "customersPerDay": 5,
+      "customerPool": ["C01", "C02", "C03", "C04", "C09"],
+      "supplyEventChance": 0.35
+    },
+    {
+      "day": 5,
+      "advisorId": "none",
+      "tobaccoRation": 7,
+      "customersPerDay": 5,
+      "customerPool": ["C01", "C02", "C03", "C04", "C09"],
+      "supplyEventChance": 0.45,
+      "note": "助言役不在日。最も心細い一日"
+    },
+    {
+      "day": 6,
+      "advisorId": "laplace",
+      "tobaccoRation": 6,
+      "customersPerDay": 6,
+      "customerPool": ["C01", "C02", "C03", "C04", "C09"],
+      "supplyEventChance": 0.5
+    },
+    {
+      "day": 7,
+      "advisorId": "none",
+      "tobaccoRation": 6,
+      "customersPerDay": 6,
+      "customerPool": ["C01", "C02", "C03", "C04", "C09"],
+      "supplyEventChance": 0.6,
+      "note": "試作最終日。最高難度"
+    }
+  ],
+  "dayStartInfo": ["今日の助言役", "煙草の配給量", "棚の中身", "供給イベント"],
+  "openQuestions": {
+    "inventoryResetPolicy": "在庫は日次リセットせず通しで管理する（decisions.md P05参照）。",
+    "tableDamageThreshold": "腐食strength合計3を暫定値として採用（decisions.md P02参照）。バランス検証後に調整可。"
+  }
+}

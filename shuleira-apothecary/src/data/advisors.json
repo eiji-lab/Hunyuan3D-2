@@ -1,0 +1,69 @@
+{
+  "principle": "日によって誰が居るかが変わる。助言の質がそのまま難易度になる。数値をいじらずに難易度カーブを作る。",
+  "advisors": [
+    {
+      "id": "shuleira",
+      "name": "シュレイラ・クーゲル",
+      "title": "大臣",
+      "appearance": "青髪。常に気だるげ。何が起きても余裕そうな表情をしている。",
+      "background": "煙草の製造者。特殊な体質により、いかなる劇薬でも自分を失わない。",
+      "adviceQuality": "的確。淡々と正解に近いことを言う。",
+      "crisisBehavior": {
+        "easyOrTutorial": "煙草をくれる",
+        "normal": "助けない（言うだけ）"
+      },
+      "difficultyRank": "最も易しい",
+      "dialogueId": "shuleira",
+      "inPrototypeScope": true
+    },
+    {
+      "id": "ruvine",
+      "name": "ルヴィーネ・クーゲル",
+      "title": "祭司",
+      "appearance": "赤髪。背が低いが高齢。",
+      "background": "一人称は「私様」。口が悪い。祭司らしい仕事は何もしていない。",
+      "adviceQuality": "やる気がない。基本的に役に立たない。ただし高位のハーピィなので、稀に的確すぎることを言う。",
+      "difficultyRank": "中",
+      "dialogueId": null,
+      "inPrototypeScope": false
+    },
+    {
+      "id": "laplace",
+      "name": "ラプラス・オーゲル",
+      "title": "解放の魔女／ミストリアの神",
+      "appearance": "幼い子どものような外見。常に笑っている。空中に浮いている。",
+      "background": "鱗粉の狂気により思考は支離滅裂。",
+      "adviceQuality": "ほぼ意味不明。当たった時のみ完全な正解。",
+      "special": {
+        "effect": "彼女自身が世界最強の麻薬であるため、居る日はプレイヤーの症状進行が速くなる（progression.json: playerProgressMultiplier 1.5）。"
+      },
+      "difficultyRank": "最も難しい",
+      "dialogueId": "laplace",
+      "inPrototypeScope": true
+    },
+    {
+      "id": "shinjin",
+      "name": "（未定）",
+      "title": "新人ちゃん（仮）",
+      "appearance": null,
+      "background": "プレイヤーの後に入った、さらに新しい新人。",
+      "adviceQuality": "助言しない。質問してくる（「これ何ですか」「大丈夫ですか」）。",
+      "assistance": "単純作業を代行してくれる。",
+      "difficultyRank": "中〜高",
+      "dialogueId": null,
+      "inPrototypeScope": false,
+      "note": "名前・詳細設定は保留（decisions.md P01参照）。"
+    },
+    {
+      "id": "none",
+      "name": "誰も居ない日",
+      "title": null,
+      "appearance": null,
+      "background": null,
+      "adviceQuality": "助言なし。煙草の補給もなし。",
+      "difficultyRank": "最高難度",
+      "dialogueId": null,
+      "inPrototypeScope": true
+    }
+  ]
+}

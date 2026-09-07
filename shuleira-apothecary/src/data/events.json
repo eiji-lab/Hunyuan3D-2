@@ -1,0 +1,47 @@
+{
+  "principle": "難易度を数値で上げるのではなく、「何が無いか」で上げる。この国の心細さが、そのまま難易度になる。",
+  "announcedAt": "日の開始時",
+  "events": [
+    {
+      "id": "EV01",
+      "name": "大嵐",
+      "description": "カリア山脈の峠が閉鎖。他国産が全て入らない。",
+      "mechanicalEffect": { "type": "blockSupply", "originGroup": "他国産" }
+    },
+    {
+      "id": "EV02",
+      "name": "キャラバン到着",
+      "description": "帝国産が潤沢。当たりの日。",
+      "mechanicalEffect": { "type": "boostSupply", "originGroup": "帝国産", "multiplier": 3 }
+    },
+    {
+      "id": "EV03",
+      "name": "配給削減",
+      "description": "安寧葉の配給が半減。煙草の判断が一気に厳しくなる。",
+      "mechanicalEffect": { "type": "reduceSupply", "materialId": "M12", "multiplier": 0.5 }
+    },
+    {
+      "id": "EV04",
+      "name": "密売人の来訪",
+      "description": "灰死粉が棚に並ぶ。使うかどうかを選べる。",
+      "mechanicalEffect": { "type": "makeAvailable", "materialId": "M22" }
+    },
+    {
+      "id": "EV05",
+      "name": "雨季（ヒドラルート）",
+      "description": "蝕鱗が大量に落ちてくる。危険物だけが余る。",
+      "mechanicalEffect": { "type": "boostSupply", "materialId": "M03", "multiplier": 4 }
+    },
+    {
+      "id": "EV06",
+      "name": "シュレイラの試作品",
+      "description": "効能不明の素材が一つ置いてある。説明欄が空白。",
+      "mechanicalEffect": {
+        "type": "mysteryMaterial",
+        "displayEffectsAs": "――",
+        "resolvesOnUse": true,
+        "note": "使ってみるまで分からない。使えば分かる。プレイヤーが自分で説明欄を埋めていく（メモ機能に反映される）。実際の薬効・副作用は既存22種の中から実行時にランダムに割り当てる暫定仕様（decisions.md参照）。"
+      }
+    }
+  ]
+}
