@@ -191,11 +191,12 @@ function renderSettingsBar(s: GameState): string {
     <div class="settings-bar">
       <button class="tobacco-btn" data-action="smoke" ${s.tobacco <= 0 ? 'disabled' : ''}>自分で吸う</button>
       <span>選択中: ${selectedTableId}</span>
-      <label style="display:flex;align-items:center;gap:4px;">
+      <button class="mute-btn" data-action="mute">${s.muted ? 'ミュート中' : 'ミュート'}</button>
+      <button class="mute-btn" data-action="reset">リセット</button>
+      <label style="display:flex;align-items:center;gap:4px;flex-basis:100%;">
         音量
         <input type="range" min="0" max="1" step="0.05" value="${s.volume}" data-action="volume" />
       </label>
-      <button class="mute-btn" data-action="mute">${s.muted ? 'ミュート中' : 'ミュート'}</button>
     </div>
   `;
 }
@@ -313,6 +314,17 @@ app.addEventListener('click', (ev) => {
     case 'mute':
       state = { ...state, muted: !state.muted };
       break;
+    case 'reset': {
+      const confirmed = window.confirm('進行状況を消して1日目からやり直します。よろしいですか？');
+      if (confirmed) {
+        saveStore.remove(STORAGE_KEYS.gameState);
+        state = startDay(1, null);
+        dayStarted = false;
+        selectedCustomerInstanceId = null;
+        selectedTableId = state.tables[0]?.id ?? 'T1';
+      }
+      break;
+    }
     default:
       break;
   }
