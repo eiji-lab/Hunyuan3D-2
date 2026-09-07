@@ -30,28 +30,34 @@ function dayConfig(day: number) {
   return DAY_CURVE[Math.min(day - 1, DAY_CURVE.length - 1)];
 }
 
-/** 供給層に応じた初期在庫を作る（decisions.md D05: 在庫は通しで管理するため、初回のみ使用）。 */
+/**
+ * 供給層ごとの1日あたり基準在庫量。
+ * 「常時在庫＝ほぼ切れない」「配給＝量は日ごとに変動」という素材文書§08の記述に
+ * 対応させるため、常時在庫・配給は日次で基準値まで補充する。
+ * 交易入荷・密輸は基準値を設けず、支払いや供給イベントでしか増えない
+ * （「数が来ない」「極めて不安定」「売人が来た日にしか手に入らない」に対応）。
+ */
+const DAILY_BASELINE_STOCK: Record<string, number> = {
+  常時在庫: 8,
+  配給: 4,
+};
+
+/** 初日の在庫を作る（常時在庫・配給は基準値、交易入荷・密輸はごく僅か）。 */
 function buildInitialInventory(): Record<string, number> {
   const inventory: Record<string, number> = {};
   for (const m of MATERIALS) {
-    switch (m.supplyTier) {
-      case '常時在庫':
-        inventory[m.id] = 8;
-        break;
-      case '配給':
-        inventory[m.id] = 4;
-        break;
-      case '交易入荷':
-        inventory[m.id] = 1;
-        break;
-      case '密輸':
-        inventory[m.id] = 0;
-        break;
-      default:
-        inventory[m.id] = 2;
-    }
+    inventory[m.id] = DAILY_BASELINE_STOCK[m.supplyTier] ?? (m.supplyTier === '交易入荷' ? 1 : 0);
   }
   return inventory;
+}
+
+/** 常時在庫・配給を日次で基準値まで補充する（decisions.md D12参照）。前日の残り・支払い分はそのまま活かす。 */
+function applyDailyReplenishment(inventory: Record<string, number>): void {
+  for (const m of MATERIALS) {
+    const baseline = DAILY_BASELINE_STOCK[m.supplyTier];
+    if (baseline === undefined) continue;
+    inventory[m.id] = Math.max(inventory[m.id] ?? 0, baseline);
+  }
 }
 
 function applySupplyEvent(inventory: Record<string, number>, eventId: string | null): void {
@@ -111,6 +117,7 @@ function buildSpawnSchedule(customerPool: string[], count: number, durationMs: n
 export function startDay(day: number, previousInventory: Record<string, number> | null): GameState {
   const config = dayConfig(day);
   const inventory = previousInventory ? { ...previousInventory } : buildInitialInventory();
+  applyDailyReplenishment(inventory);
   const supplyEventId = pickSupplyEvent(config.supplyEventChance);
   applySupplyEvent(inventory, supplyEventId);
 

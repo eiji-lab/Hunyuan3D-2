@@ -17,7 +17,7 @@
       { "id": "severe", "name": "重度", "min": 75, "max": 94, "effect": "幻覚。表示されている薬・素材の内容が実際と食い違う。台詞の切り替え間隔が最短になる（1秒）" },
       { "id": "critical", "name": "限界", "min": 95, "max": 100, "effect": "操作が奪われる（数秒間）。素材を全て投入する、客を殴るなどの暴走" }
     ],
-    "progressPerSecond": 0.4,
+    "progressPerSecond": 0.6,
     "mistakeRateByStage": {
       "healthy": 0,
       "mild": 0.05,
