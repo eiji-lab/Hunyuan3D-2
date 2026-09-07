@@ -1,0 +1,364 @@
+:root {
+  --bg: #eeece4;
+  --bg-panel: #f7f5ef;
+  --fg: #2c2a30;
+  --fg-dim: #6b6874;
+  --border: #d8d4c8;
+  --accent-violet: #a98bc9;
+  --accent-teal: #7ec9c0;
+  --accent-pink: #dcaecb;
+  --accent-amber: #d8b56a;
+  --danger: #b1495a;
+  --scorched: #241f1a;
+  --shelf-selected: #cbb8e0;
+  --font: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(160deg, var(--bg), #e6e0ee 60%, var(--bg));
+  color: var(--fg);
+  font-family: var(--font);
+  height: 100%;
+}
+
+#app {
+  max-width: 480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--bg-panel);
+  box-shadow: 0 0 24px rgba(120, 100, 140, 0.15);
+}
+
+@media (min-width: 720px) {
+  #app {
+    max-width: 480px;
+    min-height: 100vh;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 16px 0;
+  }
+}
+
+header.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, var(--accent-violet), var(--accent-teal));
+  color: #fff;
+  font-size: 13px;
+}
+
+header.hud .hud-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.customer-row {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  min-height: 64px;
+}
+
+.customer-thumb {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 2px solid var(--accent-pink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  text-align: center;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.customer-thumb.waiting {
+  border-color: var(--fg-dim);
+  opacity: 0.6;
+}
+
+.tables {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  background: var(--bg-panel);
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.table-card.selected {
+  outline: 2px solid var(--accent-violet);
+}
+
+.table-card.scorched {
+  background: var(--scorched);
+  color: #b9ada0;
+  border-color: #000;
+}
+
+.table-card .customer-name {
+  font-size: 12px;
+  font-weight: bold;
+  min-height: 16px;
+}
+
+.table-card .dialogue-line {
+  font-size: 11px;
+  color: var(--fg-dim);
+  white-space: pre-line;
+  min-height: 40px;
+  flex: 1;
+}
+
+.table-card.scorched .dialogue-line {
+  color: #7d7267;
+}
+
+.table-card .queue {
+  font-size: 10px;
+  min-height: 16px;
+  word-break: break-all;
+}
+
+.table-card .actions {
+  display: flex;
+  gap: 4px;
+}
+
+.table-card button {
+  flex: 1;
+  font-size: 10px;
+  padding: 4px 2px;
+}
+
+.shelf-tabs {
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.shelf-tabs button {
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: var(--fg-dim);
+  border-bottom: 2px solid transparent;
+}
+
+.shelf-tabs button.active {
+  color: var(--fg);
+  border-bottom-color: var(--accent-violet);
+  font-weight: bold;
+}
+
+.shelf {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 8px;
+}
+
+.material-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  background: var(--bg-panel);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.material-card:active {
+  background: var(--shelf-selected);
+}
+
+.material-card.out-of-stock {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.material-card .name {
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+}
+
+.material-card .effects {
+  color: var(--accent-violet);
+}
+
+.material-card .side-effects {
+  color: var(--danger);
+}
+
+.material-card .desc {
+  color: var(--fg-dim);
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 16, 24, 0.88);
+  color: #f5f0ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+  z-index: 20;
+  white-space: pre-line;
+}
+
+.overlay button {
+  padding: 10px 24px;
+  font-size: 14px;
+  border-radius: 20px;
+  border: none;
+  background: var(--accent-violet);
+  color: #fff;
+}
+
+.settings-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  flex-wrap: nowrap;
+}
+
+.settings-bar label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-bar span {
+  white-space: nowrap;
+}
+
+.settings-bar input[type='range'] {
+  flex: 1;
+  min-width: 0;
+}
+
+/* プレイヤー症状の視覚効果 */
+#app.stage-mild .dialogue-line,
+#app.stage-mild .material-card .name {
+  animation: text-wobble 2.4s infinite ease-in-out;
+}
+
+#app.stage-moderate {
+  animation: screen-sway 3.6s infinite ease-in-out;
+}
+
+#app.stage-moderate .dialogue-line {
+  animation: text-wobble 1.2s infinite ease-in-out;
+}
+
+#app.stage-severe {
+  animation: screen-sway 1.8s infinite ease-in-out;
+  filter: saturate(1.4) hue-rotate(6deg);
+}
+
+#app.stage-severe .material-card .name::after {
+  content: ' ?';
+  color: var(--danger);
+}
+
+#app.stage-critical {
+  filter: brightness(0.7) saturate(1.8);
+}
+
+#app.stage-critical::after {
+  content: '……手が、止まらない……';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(80, 10, 30, 0.55);
+  color: #fff;
+  font-size: 18px;
+  z-index: 30;
+  pointer-events: none;
+}
+
+@keyframes text-wobble {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(1px) skewX(0.5deg);
+  }
+}
+
+@keyframes screen-sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(0.3deg);
+  }
+}
+
+.tobacco-btn {
+  background: var(--accent-amber);
+  border: none;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.mute-btn {
+  background: none;
+  border: 1px solid #fff;
+  color: #fff;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
