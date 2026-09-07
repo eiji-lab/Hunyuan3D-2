@@ -1,0 +1,173 @@
+{
+  "note": "プレイヤーには一切開示しない。踏んで覚えることを前提としたデータ。全14種（E03は現行22素材構成では未実装の予約枠）。調合エンジンは全件を判定対象とする。",
+  "combos": [
+    {
+      "id": "E01",
+      "label": "逆転",
+      "status": "active",
+      "materials": ["M01", "M03"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "遮断が鎮静を食い潰し、鎮静が興奮に反転する。",
+      "narrativeEffect": "静かにさせるつもりの薬で、客が暴れ出す。",
+      "designNote": "最も踏みやすい事故。序盤の教材",
+      "severity": "accident_recoverable"
+    },
+    {
+      "id": "E02",
+      "label": "純化",
+      "status": "active",
+      "materials": ["M02", "M12"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "安寧葉が依存を相殺し、鎮静だけが純粋に残る。依存＋＋＋が依存＋になる。",
+      "narrativeEffect": null,
+      "designNote": "発見時の報酬が最も大きい。シュレイラの煙草が何であるかの答えでもある",
+      "severity": "beneficial"
+    },
+    {
+      "id": "E03",
+      "label": "（予約・未実装）",
+      "status": "reserved",
+      "materials": ["M16", "カトレア塩（未採用）"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": null,
+      "narrativeEffect": null,
+      "designNote": "塩を素材に加える場合のみ有効。現行の22種構成では未使用（decisions.md P06参照）。",
+      "severity": null
+    },
+    {
+      "id": "E04",
+      "label": "致死・器具破壊",
+      "status": "active",
+      "materials": ["M03", "M04"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "毒性が跳ね上がり、器具が溶ける。薬にすらならない。",
+      "narrativeEffect": null,
+      "designNote": "最大の事故。薄めようとした善意が最悪を招く",
+      "severity": "lethal_risk",
+      "destroysTableImmediately": true,
+      "ignoresTableDamageThreshold": true,
+      "formsNoPotion": true
+    },
+    {
+      "id": "E05",
+      "label": "無効化",
+      "status": "active",
+      "materials": ["M19", "M16"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "解熱と発熱が完全に打ち消し合い、両方が消える。毒も出ないが、何も効かない。",
+      "narrativeEffect": null,
+      "designNote": "安全な失敗。時間だけが失われる",
+      "severity": "neutral_failure"
+    },
+    {
+      "id": "E06",
+      "label": "暴走・浮遊",
+      "status": "active",
+      "materials": ["M08", "M02"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "浮遊が暴走し、客が天井まで浮き上がる。死にはしない。降りてこられない。",
+      "narrativeEffect": null,
+      "designNote": "笑える種類の事故。緊張の合間に置く",
+      "severity": "accident_recoverable"
+    },
+    {
+      "id": "E07",
+      "label": "後遺症",
+      "status": "active",
+      "materials": ["M18", "M15"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "鈍麻が重なり、全感覚が落ちる。その場では成功に見える。",
+      "narrativeEffect": "その客は次回、飛べなくなって来店する。",
+      "designNote": "最も気づきにくい失敗",
+      "severity": "accident_hidden",
+      "delayedConsequence": "customerReturnsWithReducedFlight"
+    },
+    {
+      "id": "E08",
+      "label": "緩和",
+      "status": "active",
+      "materials": ["M05", "*"],
+      "matchRule": "diluent-plus-any",
+      "mechanicalEffect": "同時に入れた素材の副作用のみが半減する。薬効はそのまま。",
+      "narrativeEffect": null,
+      "designNote": "使えば必ず良くなる。だが数が無い",
+      "severity": "beneficial"
+    },
+    {
+      "id": "E09",
+      "label": "被覆",
+      "status": "active",
+      "materials": ["M17", "M03"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "蜜が毒性を包み込み、毒性＋＋＋が毒性＋まで落ちる。遮断＋＋＋がほぼ無傷で通る。",
+      "narrativeEffect": null,
+      "designNote": "重度の幻覚に対する事実上の唯一解",
+      "severity": "beneficial",
+      "resolvesSymptom": "S11"
+    },
+    {
+      "id": "E10",
+      "label": "根治・激痛",
+      "status": "active",
+      "materials": ["M07", "M13"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "解毒が依存を根こそぎ抜く。禁断症状を根本から断てる唯一の組み合わせ。",
+      "narrativeEffect": "ただし客は激しく苦しみ、暴れ、その日は倒れる。",
+      "designNote": "「治すか、抑えるか」の選択がここで初めて現れる",
+      "severity": "cure_severe",
+      "curesAddiction": true,
+      "customerCollapsesThatDay": true
+    },
+    {
+      "id": "E11",
+      "label": "極端例",
+      "status": "active",
+      "materials": ["M21", "M01"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "世界樹の情報構造が鱗粉を上書きする。客の皮膚に樹皮様の角質が浮き、指先が硬化する。症状は完全に消える。代わりに樹木化が始まる。",
+      "narrativeEffect": null,
+      "designNote": "最高級品と最安品を混ぜてはいけない",
+      "severity": "accident_severe"
+    },
+    {
+      "id": "E12",
+      "label": "最良",
+      "status": "active",
+      "materials": ["M12", "M14", "M05"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "副作用ゼロで鎮静・保持・解熱・鎮痛が揃う。この国で作れる最も真っ当な薬。",
+      "narrativeEffect": null,
+      "designNote": "全部揃うことはまず無い。理想として存在するだけ",
+      "severity": "beneficial"
+    },
+    {
+      "id": "E13",
+      "label": "過剰増幅・致死",
+      "status": "active",
+      "materials": ["M11", "M03"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "遮断＋＋＋がさらに引き上げられ、神経の遮断が呼吸にまで及ぶ。幻覚は完全に消える。息も止まる。",
+      "narrativeEffect": null,
+      "designNote": "「よく効かせよう」という善意が最も危険な形で通る",
+      "severity": "lethal_risk"
+    },
+    {
+      "id": "E14",
+      "label": "解毒剤",
+      "status": "active",
+      "materials": ["M22", "M17"],
+      "matchRule": "exact-set",
+      "mechanicalEffect": "蜜が灰死粉の毒性と腐食を抑え、解毒＋＋＋だけが残る。",
+      "narrativeEffect": null,
+      "designNote": "密輸品を使いこなす唯一の道。ただし両方揃うことがまず無い",
+      "severity": "beneficial",
+      "curesAddiction": true,
+      "milderThan": "E10"
+    }
+  ],
+  "inputOrderRules": {
+    "principle": "先に入れた素材ほど薬効が強く出る／後に入れた素材ほど副作用が抑えられる。",
+    "basicRule": "効かせたいものを先に、危険なものを後に。",
+    "stackingRule": "同じ素材を3つ以上入れると、薬効は頭打ちになり副作用だけが伸びる。"
+  }
+}

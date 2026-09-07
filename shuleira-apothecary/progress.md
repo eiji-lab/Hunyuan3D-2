@@ -11,16 +11,16 @@
 
 ## 作業中の項目
 - src/data/*.json の作成（第1段階）
-  - [ ] materials.json（素材22種）
-  - [ ] combos.json（例外14種、E03は予約のみ）
-  - [ ] symptoms.json（症例12種）
-  - [ ] customers.json（客10種）
-  - [ ] dialogue.json（台詞：客10種＋助言役2名分＋幻聴書き換え規則）
+  - [x] materials.json（素材22種）JSON構文確認済み
+  - [x] combos.json（例外14種、E03は予約のみ）JSON構文確認済み
+  - [x] symptoms.json（症例12種）JSON構文確認済み
+  - [x] customers.json（客10種）JSON構文確認済み
+  - [ ] dialogue.json（台詞：客10種＋助言役2名分＋幻聴書き換え規則）← 次はここ
   - [ ] advisors.json（助言役4名、うち2名は試作範囲外フラグ）
   - [ ] events.json（供給イベント6種）
   - [ ] progression.json（難易度カーブ、試作は1〜7日想定）
 
 ## 次にやること
-1. materials.json から着手し、22種を仕様書の説明文そのまま転記する
-2. combos.json で14例外＋E03予約枠を作る
-3. symptoms.json, customers.json と進める
+1. dialogue.json を作成する（台詞データv1.0の全文を型A/B/C/F・核心行フラグ付きで転記）
+2. advisors.json, events.json, progression.json を作る
+3. 第1段階完了後、第2段階（調合ロジックエンジン）に着手

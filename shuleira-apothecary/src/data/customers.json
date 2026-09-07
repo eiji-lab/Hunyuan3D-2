@@ -1,0 +1,312 @@
+{
+  "commonNotes": {
+    "surname": "ハーピィの姓は「クーゲル」が最も広く分布している。最初にバードマンと交配して翼を得た祖族の名であり、創始者効果によって現代ハーピィの大半がこの姓を持つ。客の多くがクーゲル姓であることに、この国の閉鎖性が出る。",
+    "payment": "この国に通貨経済は存在しない。客は持ってきた物を置いていく。置いていく物は翌日の在庫になる。何を置いていくかが、その客の情報にもなる。",
+    "revisit": "客は再来する。前回の処置の結果を持って戻ってくる。代用による副作用が蓄積していれば、症状が一段進んでいる。悪化トリガーの詳細が原文に明記されていない客については、この一般則（副作用の蓄積による悪化）を適用する。"
+  },
+  "traps": {
+    "罠01": "過小申告",
+    "罠02": "過大申告",
+    "罠03": "単純要求",
+    "罠04": "要求の変化",
+    "罠05": "自分の幻覚（プレイヤー側の症状によるもの。特定の客に紐づかない）"
+  },
+  "customers": [
+    {
+      "id": "C01",
+      "name": "ミル・クーゲル",
+      "age": "子ども",
+      "apparentSymptom": "S05",
+      "trueSymptom": "S05",
+      "trap": null,
+      "appearance": {
+        "wings": "艶があるが、まだ小さく畳み方がぎこちない",
+        "skin": "異常なし",
+        "eyes": "焦点は合っている",
+        "posture": "立っているが、時々つま先が浮く。浮きたがっている",
+        "belongings": null
+      },
+      "dialogueId": "mil",
+      "payment": {
+        "item": "渓谷の底で拾った、きれいな形の石",
+        "addsToInventory": false,
+        "note": "薬の材料にはならない。在庫には加算されない。棚の隅に置かれる。"
+      },
+      "revisit": {
+        "worseningSymptom": "S08",
+        "trigger": "generic"
+      },
+      "seatVacatesOnCure": false,
+      "inPrototypeScope": true,
+      "notes": "最初の客に置く想定。読み取りが素直で、正解が一つしかない。この国では、幼少期の死亡率が極めて高い。飛べるようになる前に落ちる子どもが多い。本人はそれを知らない。"
+    },
+    {
+      "id": "C02",
+      "name": "ハウ・クーゲル",
+      "age": "中年",
+      "apparentSymptom": "S02",
+      "trueSymptom": "S02",
+      "trap": "罠02",
+      "appearance": {
+        "wings": "一部に羽が抜けた跡",
+        "skin": "正常",
+        "eyes": "焦点は完全に合っている",
+        "posture": "体格がいい。左腕を庇っている",
+        "belongings": null,
+        "other": "声だけがやたらと大きい"
+      },
+      "dialogueId": "hau",
+      "payment": {
+        "item": "崖苔の束。仕事のついでに毟ってきたもの",
+        "addsToInventory": true
+      },
+      "revisit": {
+        "worseningSymptom": "S04",
+        "trigger": "痛みで眠れなくなった場合",
+        "notes": "その時も同じ大声で来る。"
+      },
+      "seatVacatesOnCure": false,
+      "inPrototypeScope": true,
+      "notes": "声の大きさは症状の重さと無関係である、という教材。断崖の国なので、落ちる者・ぶつける者は日常的に出る。"
+    },
+    {
+      "id": "C03",
+      "name": "ネル・クーゲル",
+      "age": "若い",
+      "apparentSymptom": "S06",
+      "trueSymptom": "S07",
+      "trap": "罠01",
+      "appearance": {
+        "wings": "やや乾いている",
+        "skin": "細かいひび",
+        "eyes": "焦点がこちらに合っていない。少しずれた場所を見ている",
+        "posture": "普通",
+        "belongings": "煙草を持っている。まだ残っている",
+        "other": "会話の合間に、誰もいない方向へ短く返事をする"
+      },
+      "dialogueId": "neru",
+      "payment": {
+        "item": "燼葉。拾い集めたもの",
+        "addsToInventory": true
+      },
+      "revisit": {
+        "worseningSymptom": "S11",
+        "trigger": "処置せずに帰した場合",
+        "notes": "その段階では神饌蜜＋蝕鱗（E09）以外に手がない。"
+      },
+      "seatVacatesOnCure": false,
+      "inPrototypeScope": true,
+      "notes": "本人は幻聴を異常だと思っていない。この国では珍しくないから。煙草を渡せば満足して帰る。だが症状は残る。次に来る時は一段進んでいる。"
+    },
+    {
+      "id": "C04",
+      "name": "トビ・クーゲル",
+      "age": "老人",
+      "apparentSymptom": "S02",
+      "trueSymptom": "S02",
+      "trap": "罠03",
+      "appearance": {
+        "wings": "すっかり乾いているが、それは加齢によるもの",
+        "skin": "正常",
+        "eyes": "焦点は合っている",
+        "posture": "姿勢は悪いが安定している",
+        "belongings": null,
+        "other": "特に異常なし。ただ古い"
+      },
+      "dialogueId": "tobi",
+      "payment": {
+        "item": "羽灰。自分の抜けた羽を焼いたもの",
+        "addsToInventory": true
+      },
+      "revisit": {
+        "worseningSymptom": null,
+        "trigger": "悪化しない",
+        "notes": "何度でも同じことを言いに来る。"
+      },
+      "seatVacatesOnCure": false,
+      "inPrototypeScope": true,
+      "notes": "本当に痛み止めが欲しいだけである。深読みして余計な素材を足すと、副作用だけが乗って悪化する。「何もしない」が正解である場合がある、という教材。"
+    },
+    {
+      "id": "C05",
+      "name": "サユ・ヴェルニ",
+      "age": "成人",
+      "apparentSymptom": "S08",
+      "trueSymptom": "S08",
+      "trap": "罠04",
+      "appearance": {
+        "wings": "正常",
+        "skin": "正常",
+        "eyes": "焦点も合っている",
+        "posture": "外見からは何も読めない",
+        "belongings": null,
+        "other": "同じ位置に何度も視線を戻す"
+      },
+      "dialogueId": "sayu",
+      "payment": {
+        "item": "崖苔。毎回同じものを持ってくる。前に持ってきたことを覚えていない",
+        "addsToInventory": true
+      },
+      "revisit": {
+        "worseningSymptom": "S10",
+        "trigger": "処置を怠り続けると",
+        "notes": "その段階では文の途中で言葉が落ちるようになる。"
+      },
+      "seatVacatesOnCure": false,
+      "inPrototypeScope": false,
+      "notes": "待たせている間に要求が変わる唯一の客。最初に聞いた内容で作ると突き返される。作り終える前にもう一度聞くべきか、という判断が生まれる。"
+    },
+    {
+      "id": "C06",
+      "name": "カイ・クーゲル",
+      "age": "青年",
+      "apparentSymptom": "S09",
+      "trueSymptom": "S09",
+      "trap": "来店時の状態で必要な薬が真逆になる",
+      "appearance": {
+        "躁": {
+          "wings": "広がったまま畳めていない",
+          "eyes": "過度に見開いている",
+          "posture": "立っていられず、常に動いている",
+          "other": "声が大きく、早い"
+        },
+        "うつ": {
+          "wings": "完全に垂れている",
+          "eyes": "焦点が合わない",
+          "posture": "壁に寄りかかっている",
+          "other": "声が小さく、途切れる"
+        }
+      },
+      "dialogueId": "kai",
+      "payment": {
+        "躁": { "item": "大量に置いていく（時々、危険物が混じっている）", "addsToInventory": true },
+        "うつ": { "item": "何も持ってこない", "addsToInventory": false }
+      },
+      "revisit": {
+        "worseningSymptom": null,
+        "trigger": "どちらかに固着",
+        "notes": null
+      },
+      "seatVacatesOnCure": false,
+      "inPrototypeScope": false,
+      "notes": "躁には鎮静、うつには覚醒。読み違えると一気に悪化する。外見が明確に違うので、見れば分かる。見ればの話だが。"
+    },
+    {
+      "id": "C07",
+      "name": "ロゥエン・クーゲル",
+      "age": "成人",
+      "apparentSymptom": "S06",
+      "trueSymptom": "S06",
+      "trap": "緊急度が最も高い",
+      "appearance": {
+        "wings": "羽が逆立っている",
+        "skin": "ひびが深い",
+        "eyes": "こちらを見ているが、瞬きが極端に少ない",
+        "posture": "普通",
+        "belongings": "煙草を持っていない",
+        "other": "指先が震えている。汗"
+      },
+      "dialogueId": "rouen",
+      "payment": {
+        "item": "何も持っていない。「次に持ってくる」と言う",
+        "addsToInventory": false,
+        "note": "実際に次回、律儀に持ってくる。"
+      },
+      "revisit": {
+        "worseningSymptom": null,
+        "trigger": "抑えれば継続来店、根治すれば来店しなくなる",
+        "notes": "抑える：白精鱗・安寧葉系。すぐ楽になる。また来る。根治する：灰地衣＋燼葉（E10）／灰死粉＋神饌蜜（E14）。依存が根こそぎ抜ける。ただしE10では激しく苦しみ、その日は倒れる。"
+      },
+      "seatVacatesOnCure": true,
+      "inPrototypeScope": false,
+      "notes": "抑えるか、根治するかの選択が発生する唯一の客。根治した場合、以降ロゥエンは来店しなくなる。それが良いことなのかどうかは、作中で判断しない。"
+    },
+    {
+      "id": "C08",
+      "name": "ダン・レイクス",
+      "age": "成人",
+      "species": "人間（魔導帝国出身）",
+      "apparentSymptom": "S11",
+      "trueSymptom": "S11",
+      "trap": "進行が異常に速い",
+      "appearance": {
+        "wings": "ない。それだけで店の中で明らかに浮いている",
+        "skin": "顔色が悪い",
+        "eyes": "虹色に濁り始めている",
+        "posture": "普通",
+        "belongings": null,
+        "other": "汗をかいているのに寒がっている"
+      },
+      "dialogueId": "dan",
+      "payment": {
+        "item": "三号草。帝国から持ってきた荷の中身",
+        "addsToInventory": true,
+        "note": "帝国産素材が手に入る数少ない機会。"
+      },
+      "revisit": {
+        "worseningSymptom": null,
+        "trigger": "この国にいる限り悪化し続ける",
+        "notes": "最終的に来なくなる。理由は語られない。"
+      },
+      "seatVacatesOnCure": false,
+      "inPrototypeScope": false,
+      "notes": "魔素肺を持たないため、鱗粉を制御できない。ハーピィなら数年かかる進行が、数日で来る。この国に長居してはいけないということを、プレイヤーは彼を通して初めて理解する。対処にはE09（神饌蜜＋蝕鱗）が必要になる。揃わなければ、抑えるしかない。"
+    },
+    {
+      "id": "C09",
+      "name": "オルガ・クーゲル",
+      "age": "老齢",
+      "apparentSymptom": "S01",
+      "trueSymptom": "S01",
+      "trap": null,
+      "appearance": {
+        "wings": "乾いているが手入れされている",
+        "skin": "年相応",
+        "eyes": "焦点が完全に合っている",
+        "posture": "姿勢がいい。この店に入ってくる客の中で、唯一まっすぐ立っている",
+        "belongings": null
+      },
+      "dialogueId": "oruga",
+      "payment": {
+        "item": "霧雫。小瓶ひとつ。岩肌の露を、何晩もかけて集めたもの",
+        "addsToInventory": true,
+        "note": "最も貴重な素材が、最もまともな客から来る。"
+      },
+      "revisit": {
+        "worseningSymptom": null,
+        "trigger": "悪化しない"
+      },
+      "seatVacatesOnCure": false,
+      "inPrototypeScope": true,
+      "notes": "全員が支離滅裂だと読み取りが単なる作業になる。話が通じる客が一人いることで、他の九人の異常さが際立つ。鱗粉に長く晒されながら正気を保っている個体は、この国に少数いる。理由は本人にも分からない。彼女がプレイヤーの症状に気づいて声をかけてくる、という演出はプレイヤーの状態が中度以上に進んでいる時にのみ発生させること。"
+    },
+    {
+      "id": "C10",
+      "name": "名を言わない客",
+      "age": "不明",
+      "apparentSymptom": "S12",
+      "trueSymptom": "S12",
+      "trap": "治らない",
+      "appearance": {
+        "wings": "ほとんど粉になりかけている",
+        "skin": "全面が結晶化している",
+        "eyes": "虹色に完全に濁り、何も映していない",
+        "posture": "自分では歩けない。誰かに連れてこられる",
+        "belongings": null
+      },
+      "dialogueId": "namonai",
+      "payment": {
+        "item": "なし。連れてきた者が代わりに何かを置いていく",
+        "addsToInventory": true,
+        "note": "それが何かは、その日によって違う。"
+      },
+      "revisit": {
+        "worseningSymptom": null,
+        "trigger": "治らない"
+      },
+      "seatVacatesOnCure": false,
+      "inPrototypeScope": false,
+      "notes": "何をしても良くならない。死なせないだけ。プレイヤーが初めて「治せない」を突きつけられる客。滅多に出さないこと。難易度が上がった終盤に一度だけ、が最も効く。この客に対して「正解」は用意しない。どの薬を渡しても、症状は変わらない。変わるのは、その日を越えられるかどうかだけである。"
+    }
+  ]
+}

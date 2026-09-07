@@ -1,0 +1,125 @@
+{
+  "severityDistribution": {
+    "軽症": "全体の6割程度",
+    "中等症": "全体の3割程度",
+    "重症": "全体の1割程度。滅多に出さないこと"
+  },
+  "symptoms": [
+    {
+      "id": "S01",
+      "name": "風邪気味",
+      "severityTier": "軽症",
+      "requiredAxes": [{ "axis": "解熱", "minStrength": 1 }],
+      "notes": null,
+      "inPrototypeScope": true
+    },
+    {
+      "id": "S02",
+      "name": "打ち身・裂傷",
+      "severityTier": "軽症",
+      "requiredAxes": [{ "axis": "鎮痛", "minStrength": 1 }],
+      "notes": null,
+      "inPrototypeScope": true
+    },
+    {
+      "id": "S03",
+      "name": "鱗粉酔い",
+      "severityTier": "軽症",
+      "requiredAxes": [
+        { "axis": "解毒", "minStrength": 1 },
+        { "axis": "鎮静", "minStrength": 1, "note": "弱でよい" }
+      ],
+      "notes": "いずれの客にも一時的な症例として発生しうる（固定の担当客を持たない）。",
+      "inPrototypeScope": false
+    },
+    {
+      "id": "S04",
+      "name": "眠れない",
+      "severityTier": "軽症",
+      "requiredAxes": [{ "axis": "鎮静", "minStrength": 1 }],
+      "notes": null,
+      "inPrototypeScope": true
+    },
+    {
+      "id": "S05",
+      "name": "飛ぶと息が上がる",
+      "severityTier": "軽症",
+      "requiredAxes": [
+        { "axis": "浮遊", "minStrength": 1 },
+        { "axis": "解熱", "minStrength": 1 }
+      ],
+      "notes": null,
+      "inPrototypeScope": true
+    },
+    {
+      "id": "S06",
+      "name": "禁断症状",
+      "severityTier": "中等症",
+      "requiredAxes": [{ "axis": "鎮静", "minStrength": 3, "note": "抑制する場合" }],
+      "alternativeResolution": {
+        "type": "根治",
+        "requiredAxes": [{ "axis": "解毒", "minStrength": 1 }],
+        "onlyViaCombos": ["E10", "E14"]
+      },
+      "notes": "抑えるか根治するかの選択が発生する症例。",
+      "inPrototypeScope": false
+    },
+    {
+      "id": "S07",
+      "name": "幻聴",
+      "severityTier": "中等症",
+      "requiredAxes": [{ "axis": "遮断", "minStrength": 1 }],
+      "notes": null,
+      "inPrototypeScope": true
+    },
+    {
+      "id": "S08",
+      "name": "記憶が薄い",
+      "severityTier": "中等症",
+      "requiredAxes": [{ "axis": "保持", "minStrength": 1 }],
+      "notes": null,
+      "inPrototypeScope": true
+    },
+    {
+      "id": "S09",
+      "name": "躁鬱",
+      "severityTier": "中等症",
+      "requiredAxes": [],
+      "stateDependent": {
+        "躁": [{ "axis": "鎮静", "minStrength": 1 }],
+        "うつ": [{ "axis": "覚醒", "minStrength": 1 }]
+      },
+      "notes": "来店時の状態で必要な薬が真逆になる。",
+      "inPrototypeScope": false
+    },
+    {
+      "id": "S10",
+      "name": "統合失調",
+      "severityTier": "重症",
+      "requiredAxes": [
+        { "axis": "遮断", "minStrength": 1 },
+        { "axis": "保持", "minStrength": 1 }
+      ],
+      "notes": null,
+      "inPrototypeScope": false
+    },
+    {
+      "id": "S11",
+      "name": "重度の幻覚",
+      "severityTier": "重症",
+      "requiredAxes": [{ "axis": "遮断", "minStrength": 3 }],
+      "notes": "実質E09（神饌蜜＋蝕鱗）のみが解。",
+      "effectiveSolutionCombo": "E09",
+      "inPrototypeScope": false
+    },
+    {
+      "id": "S12",
+      "name": "精神の溶解",
+      "severityTier": "重症",
+      "requiredAxes": [],
+      "curable": false,
+      "notes": "治らない。死なせないだけ。滅多に出さないこと。どの薬を渡しても症状は変わらない。",
+      "inPrototypeScope": false
+    }
+  ]
+}
