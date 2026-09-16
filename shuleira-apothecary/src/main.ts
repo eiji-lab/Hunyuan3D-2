@@ -32,6 +32,24 @@ const APPEARANCE_LABELS: Record<string, string> = {
   other: 'その他',
 };
 
+/** 立ち絵が用意されるまでの仮の色味（客ごとの印象を色だけで示す）。 */
+const CUSTOMER_ACCENT: Record<string, string> = {
+  C01: '#8fd0c9', // ミル
+  C02: '#c98a5e', // ハウ
+  C03: '#9b7fc4', // ネル
+  C04: '#9aa583', // トビ
+  C05: '#a8a0b8',
+  C06: '#c47a86',
+  C07: '#b0687a',
+  C08: '#7c8aa0',
+  C09: '#d8c48a', // オルガ
+  C10: '#6f6b78',
+};
+const ADVISOR_ACCENT: Record<string, string> = {
+  shuleira: '#5e6f9e',
+  laplace: '#e3a8c9',
+};
+
 interface PersistedSave {
   state: GameState;
   dayStarted: boolean;
@@ -75,6 +93,113 @@ function advanceDialogueRotation(s: GameState): GameState {
   return { ...s, tables };
 }
 
+/**
+ * 立ち絵の代わりに、霧の中に立つ人影を抽象化したプレースホルダーを描く。
+ * 「客の顔がはっきり見えない」という世界観に寄せた仮表現（decisions.md D14）。
+ * 将来、実イラストに差し替える場合はこの関数の呼び出し箇所を置き換えるだけでよい。
+ */
+function renderPortraitSilhouette(accent: string): string {
+  return `
+    <svg class="portrait-svg" viewBox="0 0 200 260" aria-hidden="true">
+      <defs>
+        <filter id="soft-blur"><feGaussianBlur stdDeviation="6" /></filter>
+        <filter id="soft-blur-lg"><feGaussianBlur stdDeviation="14" /></filter>
+        <linearGradient id="body-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="${accent}" stop-opacity="0.95" />
+          <stop offset="1" stop-color="${accent}" stop-opacity="0.55" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="100" cy="150" rx="92" ry="108" fill="${accent}" opacity="0.16" filter="url(#soft-blur-lg)" />
+      <ellipse cx="55" cy="118" rx="46" ry="20" fill="${accent}" opacity="0.3" filter="url(#soft-blur)" transform="rotate(-28 55 118)" />
+      <ellipse cx="145" cy="118" rx="46" ry="20" fill="${accent}" opacity="0.3" filter="url(#soft-blur)" transform="rotate(28 145 118)" />
+      <ellipse cx="100" cy="185" rx="52" ry="72" fill="url(#body-grad)" filter="url(#soft-blur)" />
+      <ellipse cx="100" cy="82" rx="30" ry="34" fill="url(#body-grad)" filter="url(#soft-blur)" />
+      <ellipse cx="90" cy="66" rx="16" ry="10" fill="#fff" opacity="0.14" filter="url(#soft-blur)" />
+    </svg>
+  `;
+}
+
+function renderStageParticles(): string {
+  return Array.from({ length: 14 })
+    .map((_, i) => `<span class="mote" style="--i:${i}"></span>`)
+    .join('');
+}
+
+function renderStage(s: GameState): string {
+  const focusedTable = s.tables.find((t) => t.id === selectedTableId) ?? s.tables[0];
+  const focusedCustomer = focusedTable?.customer ?? null;
+  const stage = playerStage(s.playerMeter).id;
+
+  const tabs = s.tables
+    .map((t) => {
+      const def = t.customer ? CUSTOMERS_BY_ID[t.customer.customerId as keyof typeof CUSTOMERS_BY_ID] : null;
+      const label = t.table.scorched ? '使用不可' : def ? def.name.split('・')[0] : '空き';
+      return `<button class="stage-tab ${t.id === selectedTableId ? 'active' : ''} ${t.table.scorched ? 'scorched' : ''}" data-action="select-table" data-id="${t.id}">${escapeHtml(t.id)} ${escapeHtml(label)}</button>`;
+    })
+    .join('');
+  const waitingBadge =
+    s.waitingQueue.length > 0
+      ? `<span class="stage-waiting" data-action="select-customer" data-id="${s.waitingQueue[0].instanceId}">＋${s.waitingQueue.length} 待ち</span>`
+      : '';
+
+  let portrait = '<div class="portrait-empty">……</div>';
+  let nameplate = '——';
+  let vnText = focusedTable?.table.scorched ? '（この台は今日はもう使えない）' : '……特に何も起きていない。';
+  let appearanceLine = '';
+
+  if (focusedCustomer) {
+    const def = CUSTOMERS_BY_ID[focusedCustomer.customerId as keyof typeof CUSTOMERS_BY_ID];
+    if (def) {
+      const accent = CUSTOMER_ACCENT[def.id] ?? '#a98bc9';
+      portrait = renderPortraitSilhouette(accent);
+      nameplate = `${def.name}（${def.age}）`;
+      const line = currentDialogueLine(focusedCustomer.customerId, focusedCustomer.lineIndex).text;
+      vnText = applyHallucinationRewrite(line, stage);
+      const appearance = def.appearance as Record<string, unknown>;
+      appearanceLine = Object.entries(appearance)
+        .filter(([, v]) => typeof v === 'string')
+        .map(([k, v]) => `${APPEARANCE_LABELS[k] ?? k}: ${v}`)
+        .join(' / ');
+    }
+  }
+
+  const waitingPeek = renderWaitingPeek(s);
+
+  return `
+    <div class="stage">
+      <div class="stage-bg"></div>
+      <div class="stage-particles">${renderStageParticles()}</div>
+      <div class="stage-switcher">${tabs}${waitingBadge}</div>
+      <div class="stage-portrait">${portrait}</div>
+      ${waitingPeek}
+      <div class="vn-box">
+        ${focusedCustomer ? `<div class="vn-nameplate">${escapeHtml(nameplate)}</div>` : ''}
+        ${appearanceLine ? `<div class="vn-appearance">${escapeHtml(appearanceLine)}</div>` : ''}
+        <div class="vn-text dialogue-line">${escapeHtml(vnText)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderWaitingPeek(s: GameState): string {
+  if (!selectedCustomerInstanceId) return '';
+  const c = s.waitingQueue.find((w) => w.instanceId === selectedCustomerInstanceId);
+  if (!c) return '';
+  const def = CUSTOMERS_BY_ID[c.customerId as keyof typeof CUSTOMERS_BY_ID];
+  if (!def) return '';
+  const appearance = def.appearance as Record<string, unknown>;
+  const appearanceText = Object.entries(appearance)
+    .filter(([, v]) => typeof v === 'string')
+    .map(([k, v]) => `${APPEARANCE_LABELS[k] ?? k}: ${v}`)
+    .join(' / ');
+  return `
+    <div class="waiting-peek">
+      <div class="vn-nameplate">${escapeHtml(def.name)}（${escapeHtml(def.age)}・待機中）</div>
+      <div class="vn-appearance">${escapeHtml(appearanceText)}</div>
+    </div>
+  `;
+}
+
 function renderHud(s: GameState): string {
   const advisor = ADVISORS_BY_ID[s.advisorId as keyof typeof ADVISORS_BY_ID];
   const eventDef = s.supplyEventId ? eventsData.events.find((e) => e.id === s.supplyEventId) : null;
@@ -88,70 +213,24 @@ function renderHud(s: GameState): string {
   `;
 }
 
-function renderCustomerRow(s: GameState): string {
-  const seated = s.tables.filter((t) => t.customer).map((t) => t.customer!);
-  const waiting = s.waitingQueue;
-  const thumbs = [...seated, ...waiting]
-    .map((c) => {
-      const def = CUSTOMERS_BY_ID[c.customerId as keyof typeof CUSTOMERS_BY_ID];
-      const isWaiting = waiting.includes(c);
-      return `<div class="customer-thumb ${isWaiting ? 'waiting' : ''}" data-action="select-customer" data-id="${c.instanceId}">${escapeHtml(def?.name.split('・')[0] ?? '?')}</div>`;
-    })
-    .join('');
-  const detail = renderCustomerDetail(s);
-  return `<div class="customer-row">${thumbs || '<div style="font-size:11px;color:var(--fg-dim);padding:8px;">誰も来ていない</div>'}</div>${detail}`;
-}
-
-function renderCustomerDetail(s: GameState): string {
-  if (!selectedCustomerInstanceId) return '';
-  const all = [...s.tables.map((t) => t.customer).filter(Boolean), ...s.waitingQueue] as NonNullable<
-    GameState['tables'][number]['customer']
-  >[];
-  const c = all.find((c) => c!.instanceId === selectedCustomerInstanceId);
-  if (!c) return '';
-  const def = CUSTOMERS_BY_ID[c.customerId as keyof typeof CUSTOMERS_BY_ID];
-  if (!def) return '';
-  const stage = playerStage(s.playerMeter).id;
-  const line = currentDialogueLine(c.customerId, c.lineIndex).text;
-  const shown = applyHallucinationRewrite(line, stage);
-  const appearance = def.appearance as Record<string, unknown>;
-  const appearanceText = Object.entries(appearance)
-    .filter(([, v]) => typeof v === 'string')
-    .map(([k, v]) => `${APPEARANCE_LABELS[k] ?? k}: ${v}`)
-    .join(' / ');
+/** ステージ下の「作業台」帯。選択中の台の状態と操作ボタンだけを簡潔に示す
+ * （客の名前・台詞・外見はステージ上のVNボックスに集約したため、ここでは繰り返さない）。 */
+function renderTableStrip(s: GameState): string {
   return `
-    <div style="padding:8px;border-bottom:1px solid var(--border);font-size:12px;background:var(--bg);">
-      <div style="font-weight:bold;">${escapeHtml(def.name)}（${escapeHtml(def.age)}）</div>
-      <div style="color:var(--fg-dim);font-size:10px;margin:2px 0;">${escapeHtml(appearanceText)}</div>
-      <div class="dialogue-line">${escapeHtml(shown)}</div>
-    </div>
-  `;
-}
-
-function renderTables(s: GameState): string {
-  const stage = playerStage(s.playerMeter).id;
-  return `
-    <div class="tables">
+    <div class="table-strip">
       ${s.tables
         .map((t) => {
-          const line = t.customer ? currentDialogueLine(t.customer.customerId, t.customer.lineIndex).text : '';
-          const shownLine = t.customer ? applyHallucinationRewrite(line, stage) : '';
-          const customerName = t.customer
-            ? CUSTOMERS_BY_ID[t.customer.customerId as keyof typeof CUSTOMERS_BY_ID]?.name ?? ''
-            : '（空き）';
-          const queueText = t.queue
-            .map((id) => MATERIALS_BY_ID[id]?.name ?? id)
-            .join(' → ');
+          const queueText = t.queue.map((id) => MATERIALS_BY_ID[id]?.name ?? id).join(' → ');
+          const statusText = t.table.scorched ? '使用不可' : t.customer ? '接客中' : '空き';
           return `
-            <div class="table-card ${t.id === selectedTableId ? 'selected' : ''} ${t.table.scorched ? 'scorched' : ''}" data-action="select-table" data-id="${t.id}">
-              <div class="customer-name">${escapeHtml(customerName)}</div>
-              <div class="dialogue-line">${t.table.scorched ? '（この台は今日はもう使えない）' : escapeHtml(shownLine)}</div>
-              <div class="queue">${escapeHtml(queueText)}</div>
+            <div class="table-chip ${t.id === selectedTableId ? 'selected' : ''} ${t.table.scorched ? 'scorched' : ''}" data-action="select-table" data-id="${t.id}">
+              <div class="table-chip-head"><span>${escapeHtml(t.id)}</span><span class="table-chip-status">${escapeHtml(statusText)}</span></div>
+              <div class="queue">${escapeHtml(queueText) || '（素材未投入）'}</div>
               <div class="actions">
                 <button data-action="clear-table" data-id="${t.id}" ${t.queue.length === 0 ? 'disabled' : ''}>戻す</button>
                 <button data-action="deliver" data-id="${t.id}" ${!t.customer || t.queue.length === 0 ? 'disabled' : ''}>渡す</button>
+                ${t.customer ? `<button data-action="give-tobacco" data-id="${t.customer.instanceId}" ${s.tobacco <= 0 ? 'disabled' : ''}>煙草</button>` : ''}
               </div>
-              ${t.customer ? `<button data-action="give-tobacco" data-id="${t.customer.instanceId}" ${s.tobacco <= 0 ? 'disabled' : ''} style="font-size:10px;">煙草を渡す</button>` : ''}
             </div>
           `;
         })
@@ -237,9 +316,11 @@ function render(): void {
 
   app.innerHTML = `
     ${renderHud(state)}
-    ${renderCustomerRow(state)}
-    ${renderTables(state)}
-    ${renderShelf(state)}
+    ${renderStage(state)}
+    <div class="workbench">
+      ${renderTableStrip(state)}
+      ${renderShelf(state)}
+    </div>
     ${renderSettingsBar(state)}
     ${flashMessage ? `<div style="position:absolute;bottom:60px;left:0;right:0;text-align:center;font-size:12px;background:rgba(0,0,0,0.7);color:#fff;padding:4px;">${escapeHtml(flashMessage)}</div>` : ''}
     ${overlay}
