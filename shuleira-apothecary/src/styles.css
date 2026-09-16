@@ -80,6 +80,19 @@ textarea {
   font-feature-settings: inherit;
 }
 
+button {
+  cursor: pointer;
+  transition: transform 0.08s ease, opacity 0.08s ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+button:disabled {
+  cursor: default;
+}
+
 html,
 body {
   margin: 0;
@@ -92,27 +105,19 @@ body {
   height: 100%;
 }
 
+/*
+ * PC・大画面での据え置き機的な体験を基準にする（作者指示）。
+ * スマホ幅の箱の中に収めるのではなく、ウィンドウいっぱいの横型レイアウトにし、
+ * ステージ／作業台とも auto-fit グリッドで画面サイズに応じて列数が変わる。
+ */
 #app {
-  max-width: 480px;
-  min-height: 100vh;
-  margin: 0 auto;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
   background: var(--ink);
-  box-shadow: 0 0 48px rgba(0, 0, 0, 0.6);
-}
-
-@media (min-width: 720px) {
-  #app {
-    max-width: 480px;
-    min-height: 100vh;
-  }
-  body {
-    display: flex;
-    justify-content: center;
-    padding: 16px 0;
-  }
 }
 
 header.hud {
@@ -162,11 +167,19 @@ header.hud .hud-item:first-child {
 
 .stage {
   position: relative;
-  min-height: 44vh;
+  min-height: clamp(360px, 54vh, 720px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, var(--mist-1) 0%, var(--mist-2) 55%, var(--mist-3) 100%);
+}
+
+.stage-photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.85) brightness(0.8);
 }
 
 .stage-bg {
@@ -289,11 +302,19 @@ header.hud .hud-item:first-child {
 }
 
 .portrait-svg {
-  width: 58%;
-  max-width: 210px;
+  width: clamp(200px, 26vw, 420px);
   height: auto;
   animation: portrait-bob 6s ease-in-out infinite;
   filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.4));
+}
+
+.portrait-image {
+  width: clamp(220px, 30vw, 480px);
+  height: auto;
+  max-height: 70%;
+  object-fit: contain;
+  animation: portrait-bob 6s ease-in-out infinite;
+  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.45));
 }
 
 @keyframes portrait-bob {
@@ -370,11 +391,28 @@ header.hud .hud-item:first-child {
 .workbench {
   background: linear-gradient(180deg, var(--paper), var(--paper-dim));
   border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  flex: 1 1 auto;
+  min-height: 220px;
+}
+
+.workbench-tickets {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.workbench-shelf {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
 .table-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 6px;
   padding: 8px;
 }
@@ -382,13 +420,19 @@ header.hud .hud-item:first-child {
 .table-chip {
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 6px;
+  padding: 8px;
   background: var(--bg-panel);
   font-family: var(--font-gothic);
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.table-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
 .table-chip.selected {
@@ -418,10 +462,31 @@ header.hud .hud-item:first-child {
   color: #8b7d73;
 }
 
-.table-chip .queue {
+.vessel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 4px 6px;
+  border-radius: 20px;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.9), var(--paper-dim) 70%);
+  border: 1px solid var(--border);
+}
+
+.vessel-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.vessel-empty {
   font-size: 10px;
-  min-height: 14px;
-  word-break: break-all;
   color: var(--fg-dim);
 }
 
@@ -441,11 +506,15 @@ header.hud .hud-item:first-child {
   display: flex;
   overflow-x: auto;
   border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
 }
 
 .shelf-tabs button {
   flex: 0 0 auto;
-  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
   border: none;
   background: none;
   font-size: 12px;
@@ -455,28 +524,47 @@ header.hud .hud-item:first-child {
   border-bottom: 2px solid transparent;
 }
 
+.shelf-tabs button .material-icon {
+  stroke: var(--fg-dim);
+}
+
 .shelf-tabs button.active {
   color: var(--fg);
-  border-bottom-color: var(--accent-violet);
+  border-bottom-color: var(--tab-color, var(--accent-violet));
   font-weight: 700;
+}
+
+.shelf-tabs button.active .material-icon {
+  stroke: var(--tab-color, var(--accent-violet));
 }
 
 .shelf {
   flex: 1;
   overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  padding: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+  padding: 10px;
+  align-content: start;
 }
 
 .material-card {
   border: 1px solid var(--border);
+  border-left: 3px solid var(--tab-color, var(--border));
   border-radius: 8px;
-  padding: 6px;
+  padding: 8px;
   background: var(--bg-panel);
   font-size: 11px;
   cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.material-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
 }
 
 .material-card:active {
@@ -486,6 +574,23 @@ header.hud .hud-item:first-child {
 .material-card.out-of-stock {
   opacity: 0.35;
   pointer-events: none;
+}
+
+.material-icon-wrap {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #fff, var(--paper-dim) 75%);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.material-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .material-card .name {

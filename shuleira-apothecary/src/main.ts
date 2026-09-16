@@ -18,6 +18,7 @@ import {
 import type { GameState } from './state/types';
 import { saveStore, STORAGE_KEYS } from './state/storage';
 import { applyHallucinationRewrite, currentDialogueLine, switchIntervalMs } from './ui/dialogue';
+import { categoryColor, materialIconSvg } from './ui/materialIcons';
 
 const MATERIALS = materialsData.materials as Material[];
 const CUSTOMERS_BY_ID = Object.fromEntries(customersData.customers.map((c) => [c.id, c]));
@@ -49,6 +50,34 @@ const ADVISOR_ACCENT: Record<string, string> = {
   shuleira: '#5e6f9e',
   laplace: '#e3a8c9',
 };
+
+/**
+ * 作者から画像を受け取ったら、決められたキーで
+ * src/assets/characters/ または src/assets/backgrounds/ に配置するだけで
+ * 自動的に表示へ反映される（コード変更不要）。詳細は各フォルダのREADME参照。
+ * ファイルが無いキーは自動的にプレースホルダー（人影SVG／グラデーション背景）
+ * にフォールバックする。
+ */
+function keyByFilename(modules: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(modules).map(([path, url]) => [path.replace(/^.*\/([^/]+)\.[^.]+$/, '$1'), url]),
+  );
+}
+
+const CHARACTER_IMAGES = keyByFilename(
+  import.meta.glob('./assets/characters/*.{png,jpg,jpeg,webp}', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  }) as Record<string, string>,
+);
+const BACKGROUND_IMAGES = keyByFilename(
+  import.meta.glob('./assets/backgrounds/*.{png,jpg,jpeg,webp}', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  }) as Record<string, string>,
+);
 
 interface PersistedSave {
   state: GameState;
@@ -125,7 +154,18 @@ function renderStageParticles(): string {
     .join('');
 }
 
-function renderStage(s: GameState): string {
+interface StageContent {
+  switcherHtml: string;
+  portraitHtml: string;
+  vnBoxHtml: string;
+}
+
+/**
+ * ステージの「中身」だけを計算する。背景・パーティクルなど装飾のDOMは
+ * mount()で一度だけ作り、ここでは触らない（毎ティック作り直すとCSSアニメーションが
+ * 常にリセットされてしまうため。decisions.md D17参照）。
+ */
+function computeStageContent(s: GameState): StageContent {
   const focusedTable = s.tables.find((t) => t.id === selectedTableId) ?? s.tables[0];
   const focusedCustomer = focusedTable?.customer ?? null;
   const stage = playerStage(s.playerMeter).id;
@@ -142,7 +182,7 @@ function renderStage(s: GameState): string {
       ? `<span class="stage-waiting" data-action="select-customer" data-id="${s.waitingQueue[0].instanceId}">＋${s.waitingQueue.length} 待ち</span>`
       : '';
 
-  let portrait = '<div class="portrait-empty">……</div>';
+  let portraitHtml = '<div class="portrait-empty">……</div>';
   let nameplate = '——';
   let vnText = focusedTable?.table.scorched ? '（この台は今日はもう使えない）' : '……特に何も起きていない。';
   let appearanceLine = '';
@@ -151,7 +191,10 @@ function renderStage(s: GameState): string {
     const def = CUSTOMERS_BY_ID[focusedCustomer.customerId as keyof typeof CUSTOMERS_BY_ID];
     if (def) {
       const accent = CUSTOMER_ACCENT[def.id] ?? '#a98bc9';
-      portrait = renderPortraitSilhouette(accent);
+      const imageUrl = CHARACTER_IMAGES[def.dialogueId];
+      portraitHtml = imageUrl
+        ? `<img class="portrait-image" src="${imageUrl}" alt="${escapeHtml(def.name)}" />`
+        : renderPortraitSilhouette(accent);
       nameplate = `${def.name}（${def.age}）`;
       const line = currentDialogueLine(focusedCustomer.customerId, focusedCustomer.lineIndex).text;
       vnText = applyHallucinationRewrite(line, stage);
@@ -163,22 +206,13 @@ function renderStage(s: GameState): string {
     }
   }
 
-  const waitingPeek = renderWaitingPeek(s);
-
-  return `
-    <div class="stage">
-      <div class="stage-bg"></div>
-      <div class="stage-particles">${renderStageParticles()}</div>
-      <div class="stage-switcher">${tabs}${waitingBadge}</div>
-      <div class="stage-portrait">${portrait}</div>
-      ${waitingPeek}
-      <div class="vn-box">
-        ${focusedCustomer ? `<div class="vn-nameplate">${escapeHtml(nameplate)}</div>` : ''}
-        ${appearanceLine ? `<div class="vn-appearance">${escapeHtml(appearanceLine)}</div>` : ''}
-        <div class="vn-text dialogue-line">${escapeHtml(vnText)}</div>
-      </div>
-    </div>
+  const vnBoxHtml = `
+    ${focusedCustomer ? `<div class="vn-nameplate">${escapeHtml(nameplate)}</div>` : ''}
+    ${appearanceLine ? `<div class="vn-appearance">${escapeHtml(appearanceLine)}</div>` : ''}
+    <div class="vn-text dialogue-line">${escapeHtml(vnText)}</div>
   `;
+
+  return { switcherHtml: tabs + waitingBadge, portraitHtml, vnBoxHtml };
 }
 
 function renderWaitingPeek(s: GameState): string {
@@ -204,28 +238,32 @@ function renderHud(s: GameState): string {
   const advisor = ADVISORS_BY_ID[s.advisorId as keyof typeof ADVISORS_BY_ID];
   const eventDef = s.supplyEventId ? eventsData.events.find((e) => e.id === s.supplyEventId) : null;
   return `
-    <header class="hud">
-      <div class="hud-item">Day ${s.day}/7</div>
-      <div class="hud-item">助言: ${advisor ? escapeHtml(advisor.name) : 'なし'}</div>
-      <div class="hud-item">🚬 ${s.tobacco}</div>
-      <div class="hud-item">${eventDef ? '⚠ ' + escapeHtml(eventDef.name) : ''}</div>
-    </header>
+    <div class="hud-item">Day ${s.day}/7</div>
+    <div class="hud-item">助言: ${advisor ? escapeHtml(advisor.name) : 'なし'}</div>
+    <div class="hud-item">🚬 ${s.tobacco}</div>
+    <div class="hud-item">${eventDef ? '⚠ ' + escapeHtml(eventDef.name) : ''}</div>
   `;
 }
 
 /** ステージ下の「作業台」帯。選択中の台の状態と操作ボタンだけを簡潔に示す
  * （客の名前・台詞・外見はステージ上のVNボックスに集約したため、ここでは繰り返さない）。 */
+/** 台＝「調合中の器」。投入済み素材をアイコンチップで見せ、中身が一目でわかるようにする。 */
 function renderTableStrip(s: GameState): string {
   return `
     <div class="table-strip">
       ${s.tables
         .map((t) => {
-          const queueText = t.queue.map((id) => MATERIALS_BY_ID[id]?.name ?? id).join(' → ');
+          const chips = t.queue
+            .map((id) => {
+              const m = MATERIALS_BY_ID[id];
+              return m ? `<span class="vessel-chip" title="${escapeHtml(m.name)}">${materialIconSvg(m.category, 14)}</span>` : '';
+            })
+            .join('');
           const statusText = t.table.scorched ? '使用不可' : t.customer ? '接客中' : '空き';
           return `
             <div class="table-chip ${t.id === selectedTableId ? 'selected' : ''} ${t.table.scorched ? 'scorched' : ''}" data-action="select-table" data-id="${t.id}">
               <div class="table-chip-head"><span>${escapeHtml(t.id)}</span><span class="table-chip-status">${escapeHtml(statusText)}</span></div>
-              <div class="queue">${escapeHtml(queueText) || '（素材未投入）'}</div>
+              <div class="vessel">${chips || '<span class="vessel-empty">（素材未投入）</span>'}</div>
               <div class="actions">
                 <button data-action="clear-table" data-id="${t.id}" ${t.queue.length === 0 ? 'disabled' : ''}>戻す</button>
                 <button data-action="deliver" data-id="${t.id}" ${!t.customer || t.queue.length === 0 ? 'disabled' : ''}>渡す</button>
@@ -239,9 +277,11 @@ function renderTableStrip(s: GameState): string {
   `;
 }
 
+/** 素材箱。分類ごとに色とアイコン形状を変え、文字だけの一覧にしない。 */
 function renderShelf(s: GameState): string {
   const tabs = CATEGORIES.map(
-    (cat) => `<button class="${cat === shelfCategory ? 'active' : ''}" data-action="select-category" data-id="${cat}">${escapeHtml(cat)}</button>`,
+    (cat) =>
+      `<button class="${cat === shelfCategory ? 'active' : ''}" style="--tab-color:${categoryColor(cat)}" data-action="select-category" data-id="${cat}">${materialIconSvg(cat, 15)}<span>${escapeHtml(cat)}</span></button>`,
   ).join('');
 
   const items = MATERIALS.filter((m) => m.category === shelfCategory)
@@ -250,10 +290,13 @@ function renderShelf(s: GameState): string {
       const effects = m.effects.map((e) => `${e.axis}${'+'.repeat(e.strength)}`).join(' ');
       const side = m.sideEffects.map((e) => `${e.axis}${'+'.repeat(e.strength)}`).join(' ');
       return `
-        <div class="material-card ${stock <= 0 ? 'out-of-stock' : ''}" data-action="add-material" data-id="${m.id}">
-          <div class="name"><span>${escapeHtml(m.name)}</span><span>×${stock}</span></div>
-          <div class="effects">${escapeHtml(effects) || '（希釈用）'}</div>
-          <div class="side-effects">${escapeHtml(side)}</div>
+        <div class="material-card ${stock <= 0 ? 'out-of-stock' : ''}" style="--tab-color:${categoryColor(m.category)}" data-action="add-material" data-id="${m.id}">
+          <div class="material-icon-wrap">${materialIconSvg(m.category, 26)}</div>
+          <div class="material-body">
+            <div class="name"><span>${escapeHtml(m.name)}</span><span>×${stock}</span></div>
+            <div class="effects">${escapeHtml(effects) || '（希釈用）'}</div>
+            <div class="side-effects">${escapeHtml(side)}</div>
+          </div>
         </div>
       `;
     })
@@ -267,16 +310,14 @@ function renderShelf(s: GameState): string {
 
 function renderSettingsBar(s: GameState): string {
   return `
-    <div class="settings-bar">
-      <button class="tobacco-btn" data-action="smoke" ${s.tobacco <= 0 ? 'disabled' : ''}>自分で吸う</button>
-      <span>選択中: ${selectedTableId}</span>
-      <button class="mute-btn" data-action="mute">${s.muted ? 'ミュート中' : 'ミュート'}</button>
-      <button class="mute-btn" data-action="reset">リセット</button>
-      <label style="display:flex;align-items:center;gap:4px;flex-basis:100%;">
-        音量
-        <input type="range" min="0" max="1" step="0.05" value="${s.volume}" data-action="volume" />
-      </label>
-    </div>
+    <button class="tobacco-btn" data-action="smoke" ${s.tobacco <= 0 ? 'disabled' : ''}>自分で吸う</button>
+    <span>選択中: ${selectedTableId}</span>
+    <button class="mute-btn" data-action="mute">${s.muted ? 'ミュート中' : 'ミュート'}</button>
+    <button class="mute-btn" data-action="reset">リセット</button>
+    <label style="display:flex;align-items:center;gap:4px;flex-basis:100%;">
+      音量
+      <input type="range" min="0" max="1" step="0.05" value="${s.volume}" data-action="volume" />
+    </label>
   `;
 }
 
@@ -306,25 +347,69 @@ function renderDayEndOverlay(s: GameState): string {
   `;
 }
 
+/**
+ * 装飾用DOM（背景・パーティクルなど）は起動時に一度だけ作る。
+ * render()はデータに依存する部分だけを、変化した時だけ書き換える
+ * （毎ティックinnerHTMLを丸ごと作り直すと、鱗粉パーティクルや立ち絵の
+ * 呼吸アニメーションが常にリセットされて止まって見えるため。decisions.md D17）。
+ */
+function mount(): void {
+  const bgImageUrl = BACKGROUND_IMAGES['apothecary'];
+  app.innerHTML = `
+    <header class="hud" id="hud-root"></header>
+    <div class="stage">
+      ${bgImageUrl ? `<div class="stage-photo" style="background-image:url('${bgImageUrl}');"></div>` : ''}
+      <div class="stage-bg"></div>
+      <div class="stage-particles">${renderStageParticles()}</div>
+      <div class="stage-switcher" id="stage-switcher-root"></div>
+      <div class="stage-portrait" id="stage-portrait-root"></div>
+      <div id="waiting-peek-root"></div>
+      <div class="vn-box" id="vn-box-root"></div>
+    </div>
+    <div class="workbench">
+      <div class="workbench-tickets" id="workbench-tickets-root"></div>
+      <div class="workbench-shelf" id="workbench-shelf-root"></div>
+    </div>
+    <div class="settings-bar" id="settings-root"></div>
+    <div id="flash-root"></div>
+    <div id="overlay-root"></div>
+  `;
+}
+
+const lastHtml: Record<string, string> = {};
+function setHtml(id: string, html: string): void {
+  if (lastHtml[id] === html) return;
+  lastHtml[id] = html;
+  document.getElementById(id)!.innerHTML = html;
+}
+
 function render(): void {
   const stage = playerStage(state.playerMeter);
   app.className = `stage-${stage.id}`;
 
+  setHtml('hud-root', renderHud(state));
+
+  const stageContent = computeStageContent(state);
+  setHtml('stage-switcher-root', stageContent.switcherHtml);
+  setHtml('stage-portrait-root', stageContent.portraitHtml);
+  setHtml('waiting-peek-root', renderWaitingPeek(state));
+  setHtml('vn-box-root', stageContent.vnBoxHtml);
+
+  setHtml('workbench-tickets-root', renderTableStrip(state));
+  setHtml('workbench-shelf-root', renderShelf(state));
+  setHtml('settings-root', renderSettingsBar(state));
+
+  setHtml(
+    'flash-root',
+    flashMessage
+      ? `<div style="position:absolute;bottom:60px;left:0;right:0;text-align:center;font-size:12px;background:rgba(0,0,0,0.7);color:#fff;padding:4px;">${escapeHtml(flashMessage)}</div>`
+      : '',
+  );
+
   let overlay = '';
   if (!dayStarted) overlay = renderDayStartOverlay(state);
   else if (state.finished) overlay = renderDayEndOverlay(state);
-
-  app.innerHTML = `
-    ${renderHud(state)}
-    ${renderStage(state)}
-    <div class="workbench">
-      ${renderTableStrip(state)}
-      ${renderShelf(state)}
-    </div>
-    ${renderSettingsBar(state)}
-    ${flashMessage ? `<div style="position:absolute;bottom:60px;left:0;right:0;text-align:center;font-size:12px;background:rgba(0,0,0,0.7);color:#fff;padding:4px;">${escapeHtml(flashMessage)}</div>` : ''}
-    ${overlay}
-  `;
+  setHtml('overlay-root', overlay);
 }
 
 function setFlash(text: string): void {
@@ -434,4 +519,5 @@ window.setInterval(() => {
   render();
 }, TICK_MS);
 
+mount();
 render();
