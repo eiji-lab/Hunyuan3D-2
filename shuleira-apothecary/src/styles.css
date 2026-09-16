@@ -1,3 +1,48 @@
+/*
+ * 文体の切り分け（企画仕様§01）をそのまま書体の切り分けに対応させる。
+ * ・棚／器具／手順／数値＝実務的なゴシック（Zen Kaku Gothic New）
+ * ・客の台詞／締めの一言／表題＝文語寄りの明朝（Shippori Mincho）
+ * → 「足場が正気」なゴシックの中に、明朝の台詞だけが異物として響く。
+ * CDNには依存せず、実際に使われる文字だけをサブセット化して同梱している
+ * （scripts/subset-fonts.py。decisions.md D13参照）。
+ */
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/ZenKakuGothicNew-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/ZenKakuGothicNew-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/ZenKakuGothicNew-Bold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Shippori Mincho';
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/ShipporiMincho-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Shippori Mincho';
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/ShipporiMincho-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Shippori Mincho';
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/ShipporiMincho-Bold.woff2') format('woff2');
+}
+
 :root {
   --bg: #eeece4;
   --bg-panel: #f7f5ef;
@@ -11,11 +56,22 @@
   --danger: #b1495a;
   --scorched: #241f1a;
   --shelf-selected: #cbb8e0;
-  --font: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-gothic: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-serif: 'Shippori Mincho', "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font: var(--font-gothic);
 }
 
 * {
   box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  letter-spacing: inherit;
+  font-feature-settings: inherit;
 }
 
 html,
@@ -24,7 +80,9 @@ body {
   padding: 0;
   background: linear-gradient(160deg, var(--bg), #e6e0ee 60%, var(--bg));
   color: var(--fg);
-  font-family: var(--font);
+  font-family: var(--font-gothic);
+  font-feature-settings: "palt";
+  letter-spacing: 0.02em;
   height: 100%;
 }
 
@@ -58,13 +116,25 @@ header.hud {
   padding: 8px 12px;
   background: linear-gradient(90deg, var(--accent-violet), var(--accent-teal));
   color: #fff;
-  font-size: 13px;
+  font-family: var(--font-gothic);
+  font-weight: 500;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 header.hud .hud-item {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+header.hud .hud-item:first-child {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: none;
 }
 
 .customer-row {
@@ -128,13 +198,22 @@ header.hud .hud-item {
 }
 
 .table-card .customer-name {
+  font-family: var(--font-gothic);
   font-size: 12px;
-  font-weight: bold;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   min-height: 16px;
 }
 
+.dialogue-line {
+  font-family: var(--font-serif);
+  font-feature-settings: normal;
+  letter-spacing: 0.03em;
+  line-height: 1.75;
+}
+
 .table-card .dialogue-line {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--fg-dim);
   white-space: pre-line;
   min-height: 40px;
@@ -174,6 +253,8 @@ header.hud .hud-item {
   border: none;
   background: none;
   font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   color: var(--fg-dim);
   border-bottom: 2px solid transparent;
 }
@@ -181,7 +262,7 @@ header.hud .hud-item {
 .shelf-tabs button.active {
   color: var(--fg);
   border-bottom-color: var(--accent-violet);
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .shelf {
@@ -212,9 +293,12 @@ header.hud .hud-item {
 }
 
 .material-card .name {
-  font-weight: bold;
+  font-family: var(--font-gothic);
+  font-weight: 700;
+  letter-spacing: 0.03em;
   display: flex;
   justify-content: space-between;
+  font-variant-numeric: tabular-nums;
 }
 
 .material-card .effects {
@@ -245,11 +329,48 @@ header.hud .hud-item {
   text-align: center;
   z-index: 20;
   white-space: pre-line;
+  font-family: var(--font-serif);
+  letter-spacing: 0.04em;
+  line-height: 1.8;
+}
+
+.overlay .logotype {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.35em;
+  text-indent: 0.35em;
+  color: #fff;
+  position: relative;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+}
+
+.overlay .logotype::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-pink), var(--accent-teal), transparent);
+}
+
+.overlay .day-index {
+  font-family: var(--font-gothic);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: #cfc7dd;
+  text-transform: uppercase;
 }
 
 .overlay button {
   padding: 10px 24px;
-  font-size: 14px;
+  font-family: var(--font-gothic);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
   border-radius: 20px;
   border: none;
   background: var(--accent-violet);
@@ -353,6 +474,8 @@ header.hud .hud-item {
   border-radius: 12px;
   padding: 4px 10px;
   font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
 }
 
 .mute-btn {
@@ -362,4 +485,6 @@ header.hud .hud-item {
   border-radius: 10px;
   padding: 2px 8px;
   font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
 }

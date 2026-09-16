@@ -206,10 +206,11 @@ function renderDayStartOverlay(s: GameState): string {
   const eventDef = s.supplyEventId ? eventsData.events.find((e) => e.id === s.supplyEventId) : null;
   return `
     <div class="overlay">
-      <div style="font-size:20px;">${s.day}日目</div>
-      <div>助言役: ${advisor ? escapeHtml(advisor.name) : '誰も居ない日'}</div>
-      <div>煙草の配給: ${s.tobacco}本</div>
-      <div>${eventDef ? '本日の出来事: ' + escapeHtml(eventDef.name) + '\n' + escapeHtml(eventDef.description) : '特に変わったことはない'}</div>
+      <div class="logotype">シュレイラ調薬所</div>
+      <div class="day-index">Day ${s.day} / 7</div>
+      <div>助言役　${advisor ? escapeHtml(advisor.name) : '誰も居ない日'}</div>
+      <div>煙草の配給　${s.tobacco}本</div>
+      <div>${eventDef ? '本日の出来事　' + escapeHtml(eventDef.name) + '\n' + escapeHtml(eventDef.description) : '特に変わったことはない'}</div>
       <button data-action="begin-day">始める</button>
     </div>
   `;
@@ -218,9 +219,9 @@ function renderDayStartOverlay(s: GameState): string {
 function renderDayEndOverlay(s: GameState): string {
   return `
     <div class="overlay">
-      <div style="font-size:16px;">${s.day}日目 終了</div>
-      <div>${escapeHtml(s.closingLine ?? '')}</div>
-      <div style="font-size:11px;color:#cfc7dd;">対応: ${s.servedCount} / 倒壊: ${s.collapsedCount} / 焦げた台: ${s.tablesRuinedCount}</div>
+      <div class="day-index">Day ${s.day} 終了</div>
+      <div style="font-size:15px;">${escapeHtml(s.closingLine ?? '')}</div>
+      <div class="day-index">対応 ${s.servedCount}　倒壊 ${s.collapsedCount}　焦げた台 ${s.tablesRuinedCount}</div>
       <button data-action="next-day">${s.day >= 7 ? '試作はここまで' : '次の日へ'}</button>
     </div>
   `;
