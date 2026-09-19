@@ -46,6 +46,8 @@ export interface GameState {
   tablesRuinedCount: number;
   substitutionCount: number;
   cigarettesGivenToCustomers: number;
+  patienceExpiredCount: number;
+  dayTargetCustomers: number;
   log: DeliveryLogEntry[];
   lastCompound?: CompoundResult;
   closingLine?: string;

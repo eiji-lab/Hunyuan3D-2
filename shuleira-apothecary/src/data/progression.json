@@ -3,6 +3,10 @@
   "prototypeDurationDays": 7,
   "tableCount": 3,
   "maxConcurrentCustomers": 3,
+  "customerPatience": {
+    "maxWaitMs": 90000,
+    "rule": "客が席に着いてから（または待機列に並んでから）この時間を過ぎても対応されなければ、待ちきれずに帰る。投入済みの素材は在庫に戻す。NTE『店長スペシャル』の待ち時間ゲージを参考に追加した数値（decisions.md D18）。"
+  },
   "tableDamage": {
     "corrosionThreshold": 3,
     "rule": "投入した素材の腐食strengthの合計が閾値に達すると、その台はその日使用不可（黒く焦げた見た目のまま残る）。翌朝リセットされる。",

@@ -6,6 +6,7 @@ import type { Material } from './engine/types';
 import {
   addMaterialToTable,
   clearTableQueue,
+  CUSTOMER_PATIENCE_MS,
   deliverToCustomer,
   endDay,
   giveTobaccoToCustomer,
@@ -240,6 +241,7 @@ function renderHud(s: GameState): string {
   return `
     <div class="hud-item">Day ${s.day}/7</div>
     <div class="hud-item">助言: ${advisor ? escapeHtml(advisor.name) : 'なし'}</div>
+    <div class="hud-item hud-quota">本日 ${s.servedCount}/${s.dayTargetCustomers}人　倒壊 ${s.collapsedCount}</div>
     <div class="hud-item">🚬 ${s.tobacco}</div>
     <div class="hud-item">${eventDef ? '⚠ ' + escapeHtml(eventDef.name) : ''}</div>
   `;
@@ -260,9 +262,18 @@ function renderTableStrip(s: GameState): string {
             })
             .join('');
           const statusText = t.table.scorched ? '使用不可' : t.customer ? '接客中' : '空き';
+          const patienceRatio = t.customer
+            ? Math.max(0, 1 - (s.elapsedMs - t.customer.arrivedAtMs) / CUSTOMER_PATIENCE_MS)
+            : null;
+          const patienceLevel = patienceRatio === null ? '' : patienceRatio < 0.25 ? 'urgent' : patienceRatio < 0.55 ? 'warn' : 'calm';
+          const patienceGauge =
+            patienceRatio === null
+              ? ''
+              : `<div class="patience-gauge ${patienceLevel}"><div class="patience-fill" style="width:${Math.round(patienceRatio * 100)}%"></div></div>`;
           return `
             <div class="table-chip ${t.id === selectedTableId ? 'selected' : ''} ${t.table.scorched ? 'scorched' : ''}" data-action="select-table" data-id="${t.id}">
               <div class="table-chip-head"><span>${escapeHtml(t.id)}</span><span class="table-chip-status">${escapeHtml(statusText)}</span></div>
+              ${patienceGauge}
               <div class="vessel">${chips || '<span class="vessel-empty">（素材未投入）</span>'}</div>
               <div class="actions">
                 <button data-action="clear-table" data-id="${t.id}" ${t.queue.length === 0 ? 'disabled' : ''}>戻す</button>
@@ -336,12 +347,25 @@ function renderDayStartOverlay(s: GameState): string {
   `;
 }
 
+/** その日の評価を★1〜3で示す（NTE『店長スペシャル』の評価画面を参考。decisions.md D18）。 */
+function dayStarRating(s: GameState): number {
+  if (s.collapsedCount > 0) return 1;
+  if (s.tablesRuinedCount > 0 || s.patienceExpiredCount > 0) return 2;
+  return 3;
+}
+
+function renderStars(count: number): string {
+  return Array.from({ length: 3 }, (_, i) => `<span class="star ${i < count ? 'filled' : ''}">★</span>`).join('');
+}
+
 function renderDayEndOverlay(s: GameState): string {
+  const stars = dayStarRating(s);
   return `
     <div class="overlay">
       <div class="day-index">Day ${s.day} 終了</div>
+      <div class="star-rating">${renderStars(stars)}</div>
       <div style="font-size:15px;">${escapeHtml(s.closingLine ?? '')}</div>
-      <div class="day-index">対応 ${s.servedCount}　倒壊 ${s.collapsedCount}　焦げた台 ${s.tablesRuinedCount}</div>
+      <div class="day-index">対応 ${s.servedCount}/${s.dayTargetCustomers}　倒壊 ${s.collapsedCount}　焦げた台 ${s.tablesRuinedCount}　待ちきれず帰った客 ${s.patienceExpiredCount}</div>
       <button data-action="next-day">${s.day >= 7 ? '試作はここまで' : '次の日へ'}</button>
     </div>
   `;

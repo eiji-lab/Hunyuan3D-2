@@ -13,6 +13,8 @@ const CUSTOMERS_BY_ID = Object.fromEntries(customersData.customers.map((c) => [c
 const DAY_CURVE = progressionData.dayCurve;
 const METER = progressionData.playerSymptom;
 const TABLE_COUNT = progressionData.tableCount;
+/** 客の待ち時間ゲージの上限（NTE『店長スペシャル』を参考に追加。decisions.md D18）。 */
+export const CUSTOMER_PATIENCE_MS = progressionData.customerPatience.maxWaitMs;
 
 /**
  * 客の支払い品は文書上ナラティブな物品名で書かれており、素材IDに直結していない。
@@ -150,6 +152,8 @@ export function startDay(day: number, previousInventory: Record<string, number> 
     tablesRuinedCount: 0,
     substitutionCount: 0,
     cigarettesGivenToCustomers: 0,
+    patienceExpiredCount: 0,
+    dayTargetCustomers: config.customersPerDay,
     log: [],
     muted: false,
     volume: 0.6,
@@ -213,6 +217,32 @@ export function tick(state: GameState, deltaMs: number): GameState {
     nextState.waitingQueue.push(customer);
   }
   assignWaitingCustomers(nextState);
+
+  // 待ちきれずに帰る客（台・待機列の両方）。投入済みの素材は在庫に戻す。
+  let patienceExpiredCount = nextState.patienceExpiredCount;
+  let inventoryAfterExpiry = nextState.inventory;
+  const tablesAfterExpiry = nextState.tables.map((t) => {
+    if (t.customer && elapsedMs - t.customer.arrivedAtMs >= CUSTOMER_PATIENCE_MS) {
+      if (t.queue.length > 0) {
+        inventoryAfterExpiry = { ...inventoryAfterExpiry };
+        for (const id of t.queue) {
+          inventoryAfterExpiry[id] = (inventoryAfterExpiry[id] ?? 0) + 1;
+        }
+      }
+      patienceExpiredCount++;
+      return { ...t, queue: [], customer: null };
+    }
+    return t;
+  });
+  const waitingQueueAfterExpiry = nextState.waitingQueue.filter((c) => {
+    const expired = elapsedMs - c.arrivedAtMs >= CUSTOMER_PATIENCE_MS;
+    if (expired) patienceExpiredCount++;
+    return !expired;
+  });
+  nextState.tables = tablesAfterExpiry;
+  nextState.waitingQueue = waitingQueueAfterExpiry;
+  nextState.inventory = inventoryAfterExpiry;
+  nextState.patienceExpiredCount = patienceExpiredCount;
 
   if (
     nextState.spawnSchedule.length === 0 &&
