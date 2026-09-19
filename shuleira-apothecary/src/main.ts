@@ -79,6 +79,22 @@ const BACKGROUND_IMAGES = keyByFilename(
     import: 'default',
   }) as Record<string, string>,
 );
+const MATERIAL_IMAGES = keyByFilename(
+  import.meta.glob('./assets/materials/*.{png,jpg,jpeg,webp}', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  }) as Record<string, string>,
+);
+
+/** 素材IDの画像があればそれを、無ければ分類アイコン（SVG）を使う。 */
+function materialVisual(m: Material, size: number): string {
+  const url = MATERIAL_IMAGES[m.id];
+  if (url) {
+    return `<img class="material-icon-img" src="${url}" width="${size}" height="${size}" alt="${escapeHtml(m.name)}" />`;
+  }
+  return materialIconSvg(m.category, size);
+}
 
 interface PersistedSave {
   state: GameState;
@@ -258,7 +274,7 @@ function renderTableStrip(s: GameState): string {
           const chips = t.queue
             .map((id) => {
               const m = MATERIALS_BY_ID[id];
-              return m ? `<span class="vessel-chip" title="${escapeHtml(m.name)}">${materialIconSvg(m.category, 14)}</span>` : '';
+              return m ? `<span class="vessel-chip" title="${escapeHtml(m.name)}">${materialVisual(m, 14)}</span>` : '';
             })
             .join('');
           const statusText = t.table.scorched ? '使用不可' : t.customer ? '接客中' : '空き';
@@ -302,7 +318,7 @@ function renderShelf(s: GameState): string {
       const side = m.sideEffects.map((e) => `${e.axis}${'+'.repeat(e.strength)}`).join(' ');
       return `
         <div class="material-card ${stock <= 0 ? 'out-of-stock' : ''}" style="--tab-color:${categoryColor(m.category)}" data-action="add-material" data-id="${m.id}">
-          <div class="material-icon-wrap">${materialIconSvg(m.category, 26)}</div>
+          <div class="material-icon-wrap">${materialVisual(m, 26)}</div>
           <div class="material-body">
             <div class="name"><span>${escapeHtml(m.name)}</span><span>×${stock}</span></div>
             <div class="effects">${escapeHtml(effects) || '（希釈用）'}</div>

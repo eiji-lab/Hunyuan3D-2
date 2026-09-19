@@ -521,6 +521,7 @@ header.hud .hud-item:first-child {
   border-radius: 50%;
   background: #fff;
   box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
 }
 
 .vessel-empty {
@@ -624,6 +625,14 @@ header.hud .hud-item:first-child {
   justify-content: center;
   background: radial-gradient(circle at 35% 30%, #fff, var(--paper-dim) 75%);
   box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+
+.material-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .material-body {
